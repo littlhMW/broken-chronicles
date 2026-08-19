@@ -26,6 +26,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderTooltipEvent;
+import net.neoforged.neoforge.client.event.ScreenEvent;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import org.slf4j.Logger;
@@ -48,6 +49,25 @@ public final class ClientHandler {
     @SubscribeEvent
     public static void onLogout(ClientPlayerNetworkEvent.LoggingOut event) {
         ClientCollectionState.clear();
+    }
+
+    /**
+     * 背包/容器界面打开时，KeyMapping 不会注册点击（原版只在无界面时调 KeyMapping.set），
+     * 所以在屏幕按键事件里直接响应 N 键：悬浮在哪个物品上就阅读哪个。
+     */
+    @SubscribeEvent
+    public static void onScreenKeyPressed(ScreenEvent.KeyPressed.Pre event) {
+        if (event.getKeyCode() != ModKeyMappings.READ.getKey().getValue()) return;
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || mc.screen == null) return;
+        if (mc.screen instanceof AbstractContainerScreen<?> screen) {
+            Slot slot = screen.getSlotUnderMouse();
+            if (slot != null && slot.hasItem()) {
+                LOGGER.info("[破碎编年史] screen key N pressed, hovered slot stack={}", slot.getItem());
+                openByStack(slot.getItem());
+                event.setCanceled(true);
+            }
+        }
     }
 
     /** 被写了字的物品：tooltip 第二行显示文字标题（金色斜体），不改物品名。 */
