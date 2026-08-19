@@ -1,0 +1,16 @@
+{
+  "order": 1,
+  "type": "page",
+  "creative": true,
+  "reveal": true,
+  "startUnlocked": false,
+  "texture": "broken_chronicles:textures/gui/page/diary.png",
+  "title": {
+    "zh_cn": "余烬之光",
+    "en_us": "Light of Embers"
+  },
+  "text": {
+    "zh_cn": "# 篝火\n疲惫的旅人，坐下吧。\n在这由方块砌成的世界里，**床**便是你的篝火。\n- 右击床，即可设置重生点\n- 夜晚入睡，可跳过漫漫长夜\n> 但切记，深渊之中亦有安眠，只是不再醒来。\n---\n携带 [item:minecraft:bed]，让每一次倒下都有归处。",
+    "en_us": "# Bonfire\nRest, weary traveler.\nIn this world of blocks, the **bed** is your bonfire.\n- Right-click a bed to set your spawn point\n- Sleep through the long night\n> But know: there are beds in the Abyss from which one never wakes.\n---\nCarry [item:minecraft:bed], so every fall has a place to return to."
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "order": 21,
+  "type": "tag",
+  "creative": true,
+  "reveal": true,
+  "startUnlocked": false,
+  "title": {
+    "zh_cn": "被诅咒的剑",
+    "en_us": "Cursed Blade"
+  },
+  "item": "minecraft:diamond_sword",
+  "chance": 100,
+  "text": {
+    "zh_cn": "这把剑低语着战斗的诀窍。\n- 攻击冷却条满时出手，伤害最高\n- 剑的横扫可同时命中多个目标\n- 锋利、火焰附加等附魔可经 [item:minecraft:anvil] 转移\n> 犹豫，就会败北。",
+    "en_us": "This blade whispers the art of war.\n- Strike when the cooldown bar is full for peak damage\n- Sword sweeps hit multiple foes at once\n- Sharpness and fire aspect transfer via [item:minecraft:anvil]\n> Hesitation is defeat."
+  }
+}

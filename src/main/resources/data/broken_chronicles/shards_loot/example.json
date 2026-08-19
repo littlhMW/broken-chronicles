@@ -1,0 +1,10 @@
+{
+  "table": "minecraft:chests/village_plains_house",
+  "entries": [
+    {
+      "id": "broken_chronicles:ember_apple",
+      "weight": 5
+    },
+    "broken_chronicles:undead_memo"
+  ]
+}

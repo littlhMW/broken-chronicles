@@ -1,0 +1,16 @@
+{
+  "order": 2,
+  "type": "page",
+  "creative": true,
+  "reveal": true,
+  "startUnlocked": false,
+  "texture": "broken_chronicles:textures/gui/page/leaf.png",
+  "title": {
+    "zh_cn": "饥饿如深渊",
+    "en_us": "Hunger, the Abyss"
+  },
+  "text": {
+    "zh_cn": "# 饥饿如深渊\n饥渴会侵蚀不死人，也会侵蚀你。\n- 耕种 [item:minecraft:carrot] 与 [item:minecraft:potato]\n- 熟食优于生食：*炖菜* 与 *烤肉* 回复更多\n- 常备 [item:minecraft:golden_apple]，危机时刻的秘药\n> 空腹挑战强敌者，终将化为薪柴。",
+    "en_us": "# Hunger, the Abyss\nHunger gnaws at the undead, and it gnaws at you.\n- Farm [item:minecraft:carrot] and [item:minecraft:potato]\n- Cooked food beats raw: *stew* and *roast meat* restore more\n- Keep [item:minecraft:golden_apple] as a last resort\n> One who faces a foe on an empty stomach becomes kindling."
+  }
+}

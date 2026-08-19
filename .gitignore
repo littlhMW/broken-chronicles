@@ -1,0 +1,16 @@
+.gradle/
+build/
+run/
+run-*/
+logs/
+.modmind/
+.modtool/
+
+# Dev tool metadata
+modmind.project.json
+modmind.template.json
+docs/last-ai-change.json
+docs/last-ai-response.txt
+
+# extracted neoforge source temp
+net/

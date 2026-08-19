@@ -1,0 +1,21 @@
+{
+  "order": 11,
+  "type": "book",
+  "creative": true,
+  "reveal": false,
+  "startUnlocked": false,
+  "title": {
+    "zh_cn": "锻造之路",
+    "en_us": "The Forging Path"
+  },
+  "pages": [
+    {
+      "zh_cn": "# 铁砧与火\n利刃不会自己变强。\n- [item:minecraft:anvil] 可合并附魔、修复装备\n- [item:minecraft:enchanted_book] 的附魔可经铁砧转移\n- 命名你的武器，让它的传说开始流传",
+      "en_us": "# Anvil and Fire\nA blade does not grow strong by itself.\n- The [item:minecraft:anvil] merges enchantments and repairs gear\n- Enchantments from [item:minecraft:enchanted_book] transfer via anvil\n- Name your weapon; let its legend begin"
+    },
+    {
+      "zh_cn": "# 附魔之秘\n附魔台倾听你的祈祷。\n- 书架环绕 [item:minecraft:enchanting_table] 可提升等级\n- 钻石工具附魔后远胜于量\n- [effect:minecraft:strength] 让重剑更沉重\n> 力量不是祝福，而是代价。",
+      "en_us": "# Secrets of Enchanting\nThe enchanting table listens to prayers.\n- Surround [item:minecraft:enchanting_table] with bookshelves for higher levels\n- Enchanted diamond tools outmatch mere numbers\n- [effect:minecraft:strength] makes heavy blades heavier\n> Power is not a blessing; it is a price."
+    }
+  ]
+}

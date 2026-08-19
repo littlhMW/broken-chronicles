@@ -1,0 +1,17 @@
+{
+  "order": 20,
+  "type": "tag",
+  "creative": true,
+  "reveal": true,
+  "startUnlocked": false,
+  "title": {
+    "zh_cn": "余烬苹果",
+    "en_us": "Ember Apple"
+  },
+  "item": "minecraft:apple",
+  "chance": 100,
+  "text": {
+    "zh_cn": "被火焰熏烤过的苹果，甜得像最后的晚餐。\n- 食用 [item:minecraft:apple] 恢复 4 点饥饿值\n- 橡树落叶中偶尔能找到它：[block:minecraft:oak_leaves]\n> 不死人靠它撑过了最初的夜晚。",
+    "en_us": "An apple kissed by fire, sweet as a last supper.\n- Eating [item:minecraft:apple] restores 4 hunger\n- Found among fallen oak leaves: [block:minecraft:oak_leaves]\n> The undead survived their first night on these."
+  }
+}

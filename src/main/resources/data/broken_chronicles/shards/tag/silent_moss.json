@@ -1,0 +1,17 @@
+{
+  "order": 22,
+  "type": "tag",
+  "creative": true,
+  "reveal": true,
+  "startUnlocked": false,
+  "title": {
+    "zh_cn": "沉默的苔藓",
+    "en_us": "Silent Moss"
+  },
+  "item": "minecraft:moss_block",
+  "chance": 100,
+  "text": {
+    "zh_cn": "苔藓覆盖之处，必有幽暗。\n- 深暗之域中，苔藓块与 [block:minecraft:sculk_sensor] 相伴\n- 潜行前行，避免惊动 [entity:minecraft:warden]\n- [item:minecraft:glow_berries] 照亮无声的洞穴\n> 嘘——黑暗在听。",
+    "en_us": "Where moss grows, darkness follows.\n- In the deep dark, moss sits beside [block:minecraft:sculk_sensor]\n- Sneak, lest you wake [entity:minecraft:warden]\n- [item:minecraft:glow_berries] light the silent caves\n> Shh — the dark is listening."
+  }
+}

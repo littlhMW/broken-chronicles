@@ -1,0 +1,13 @@
+{
+  "order": 24,
+  "type": "tag",
+  "creative": true,
+  "reveal": false,
+  "startUnlocked": false,
+  "item": "minecraft:diamond",
+  "chance": 100,
+  "text": {
+    "zh_cn": "一颗晶莹的石头，比任何话语都沉重。\n- [item:minecraft:diamond] 只生成于 y=16 以下\n- 钻石镐可开采 [block:minecraft:obsidian]\n- 附魔 [item:minecraft:enchanting_table] 前，先备好钻石\n> 别在它面前炫耀财富。",
+    "en_us": "A glittering stone, heavier than any words.\n- [item:minecraft:diamond] only generates below y=16\n- A diamond pickaxe mines [block:minecraft:obsidian]\n- Save diamonds before enchanting at [item:minecraft:enchanting_table]\n> Do not flaunt riches before it."
+  }
+}

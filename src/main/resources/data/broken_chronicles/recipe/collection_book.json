@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    { "item": "minecraft:paper" },
+    { "item": "minecraft:feather" },
+    { "item": "minecraft:enchanted_book" }
+  ],
+  "result": { "id": "broken_chronicles:collection_book", "count": 1 }
+}
