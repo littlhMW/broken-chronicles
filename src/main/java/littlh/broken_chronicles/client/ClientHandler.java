@@ -113,7 +113,16 @@ public final class ClientHandler {
     /** 打开阅读：原版成书用原版看书 UI（并自动收录）；其余走模组阅读界面。 */
     private static void openByStack(ItemStack stack) {
         Minecraft mc = Minecraft.getInstance();
+        Level level = mc.level;
+        if (level == null) return;
         if (stack.is(Items.WRITTEN_BOOK)) {
+            // 匹配注册表 book 条目（模组自定义书）→ 模组阅读界面；否则原版成书用原版看书 UI
+            Optional<ResolvedContent> resolved = ShardContentResolver.resolve(stack, level.registryAccess());
+            if (resolved.isPresent() && !resolved.get().id().startsWith("vanilla:")) {
+                PacketDistributor.sendToServer(new C2SShardRead(stack.copy()));
+                mc.setScreen(new ReadingScreen(stack.copy(), resolved.get()));
+                return;
+            }
             BookViewScreen.BookAccess access = BookViewScreen.BookAccess.fromItem(stack);
             if (access != null) {
                 PacketDistributor.sendToServer(new C2SShardRead(stack.copy()));
@@ -121,8 +130,6 @@ public final class ClientHandler {
             }
             return;
         }
-        Level level = mc.level;
-        if (level == null) return;
         Optional<ResolvedContent> resolved = ShardContentResolver.resolve(stack, level.registryAccess());
         LOGGER.info("[破碎编年史] openByStack stack={} resolved={} id={}", stack, resolved.isPresent(),
                 resolved.map(r -> r.id()).orElse("-"));

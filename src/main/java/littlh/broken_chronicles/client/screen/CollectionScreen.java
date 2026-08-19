@@ -12,6 +12,8 @@ import littlh.broken_chronicles.network.GenericEntryDto;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.BookViewScreen;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.ItemStack;
@@ -198,12 +200,38 @@ public class CollectionScreen extends Screen {
                 if (index >= 0 && index < rows.size()) {
                     Row row = rows.get(index);
                     if (!row.unknown()) {
-                        Minecraft.getInstance().setScreen(new ReadingScreen(ItemStack.EMPTY, row.content(), this));
+                        if (row.content().id().startsWith("vanilla:")) {
+                            // 原版成书条目用原版看书 UI，保持原版阅读体验
+                            Minecraft.getInstance().setScreen(vanillaBookScreen(row.content()));
+                        } else {
+                            Minecraft.getInstance().setScreen(new ReadingScreen(ItemStack.EMPTY, row.content(), this));
+                        }
                     }
                 }
             }
         }
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    /** 把原版成书条目构造成原版 BookViewScreen。 */
+    private static Screen vanillaBookScreen(ResolvedContent content) {
+        String language = Minecraft.getInstance().options.languageCode;
+        HolderLookup.Provider registries = Minecraft.getInstance().level != null
+                ? Minecraft.getInstance().level.registryAccess() : null;
+        List<Component> components = content.pages().stream()
+                .map(p -> {
+                    String raw = p.resolve(language);
+                    if (registries != null) {
+                        try {
+                            Component parsed = Component.Serializer.fromJsonLenient(raw, registries);
+                            if (parsed != null) return parsed;
+                        } catch (Exception ignored) {
+                        }
+                    }
+                    return Component.literal(raw);
+                })
+                .toList();
+        return new BookViewScreen(new BookViewScreen.BookAccess(components));
     }
 
     @Override

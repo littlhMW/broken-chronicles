@@ -2,9 +2,9 @@ package littlh.broken_chronicles.client.screen;
 
 import littlh.broken_chronicles.ModConfig;
 import littlh.broken_chronicles.ModMindEntry;
-import littlh.broken_chronicles.content.MarkdownParser;
 import littlh.broken_chronicles.client.ClientCollectionState;
 import littlh.broken_chronicles.content.EntryType;
+import littlh.broken_chronicles.content.MarkdownParser;
 import littlh.broken_chronicles.content.ResolvedContent;
 import littlh.broken_chronicles.network.C2SShardRead;
 import net.minecraft.client.Minecraft;
@@ -16,7 +16,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.effect.MobEffect;
+import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
@@ -28,6 +28,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.network.PacketDistributor;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -35,26 +36,29 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 阅读界面：book 用原版书样式，page/tag 用条目材质。打开即自动发送阅读（收录）包。
- * 支持行内图标引用：[item:minecraft:apple] [block:minecraft:stone]
- * [entity:minecraft:cow] [effect:minecraft:strength]，阅读时渲染对应图标。
- * returnScreen 非空时，关闭（X / ESC）会退回该界面（例如从编年史点开的条目）。
+ * 阅读界面：page/tag/book 统一用「材质背景 + 文字」样式渲染。
+ * page/tag 单页滚动；book 多页，同一样式下加翻页（按钮 / 滚轮 / 每页独立材质）。
+ * 材质按原图比例缩放铺满屏幕，透明背景部分透出深色底。
+ * 原版成书走原版 BookViewScreen，不经过本界面。
+ * 打开即自动发送阅读（收录）包。
  */
 public class ReadingScreen extends Screen {
-    private static final ResourceLocation BOOK_TEXTURE = ResourceLocation.withDefaultNamespace("textures/gui/book.png");
-    private static final int BOOK_WIDTH = 192;
-    private static final int BOOK_HEIGHT = 192;
     private static final int LINE_HEIGHT = 9;
     private static final int ICON_WIDTH = 18;
     private static final int ICON_HEIGHT = 18;
+    private static final int SCREEN_MARGIN = 24;
     private static final Pattern ICON_PATTERN = Pattern.compile("\\[(item|block|entity|effect):([a-zA-Z0-9_.:/\\-]+)]");
 
-    /** 一个布局段：文本或图标。图标用 stack 渲染，文本用 component 渲染。 */
+    /** 一个布局段：文本或图标。 */
     private record Segment(boolean icon, Component text, ItemStack stack, int width) {
     }
 
-    /** 折行后的一行，height 是该行需要的像素高度（含图标时更高）。 */
+    /** 折行后的一行。 */
     private record Line(List<Segment> segments, int height) {
+    }
+
+    /** 材质在屏幕上的绘制位置与原始像素尺寸。 */
+    private record PageLayout(int x, int y, int w, int h, int texW, int texH) {
     }
 
     private final ItemStack source;
@@ -68,6 +72,9 @@ public class ReadingScreen extends Screen {
     private int currentPage;
     private double scroll;
     private boolean readSent;
+    private Button closeButton;
+    private Button prevButton;
+    private Button nextButton;
 
     public ReadingScreen(ItemStack source, ResolvedContent content) {
         this(source, content, null);
@@ -104,23 +111,26 @@ public class ReadingScreen extends Screen {
             readSent = true;
             PacketDistributor.sendToServer(new C2SShardRead(source.copy()));
         }
-        if (book) {
-            int bookX = (this.width - BOOK_WIDTH) / 2;
-            int bookY = 2;
-            this.addRenderableWidget(Button.builder(Component.literal("<"), b -> flipPage(-1))
-                    .bounds(bookX + 14, bookY + 158, 20, 16).build());
-            this.addRenderableWidget(Button.builder(Component.literal(">"), b -> flipPage(1))
-                    .bounds(bookX + 158, bookY + 158, 20, 16).build());
-        } else {
-            int x = (this.width - 220) / 2;
-            int y = Math.max(8, (this.height - 280) / 2);
-            this.addRenderableWidget(Button.builder(Component.literal("X"), b -> onClose())
-                    .bounds(x + 206, y - 4, 16, 14).build());
+        PageLayout layout = computeLayout(currentTexture());
+        this.closeButton = Button.builder(Component.literal("X"), b -> onClose())
+                .bounds(layout.x() + layout.w() - 18, Math.max(4, layout.y() - 8), 16, 14).build();
+        this.addRenderableWidget(closeButton);
+        if (book && pageTexts.size() > 1) {
+            this.prevButton = Button.builder(Component.literal("<"), b -> flipPage(-1))
+                    .bounds(layout.x() + 6, layout.y() + layout.h() - 22, 20, 16).build();
+            this.nextButton = Button.builder(Component.literal(">"), b -> flipPage(1))
+                    .bounds(layout.x() + layout.w() - 26, layout.y() + layout.h() - 22, 20, 16).build();
+            this.addRenderableWidget(prevButton);
+            this.addRenderableWidget(nextButton);
         }
     }
 
     private void flipPage(int delta) {
-        currentPage = Math.max(0, Math.min(pageTexts.size() - 1, currentPage + delta));
+        int target = Math.max(0, Math.min(pageTexts.size() - 1, currentPage + delta));
+        if (target != currentPage) {
+            currentPage = target;
+            scroll = 0;
+        }
     }
 
     @Override
@@ -135,63 +145,81 @@ public class ReadingScreen extends Screen {
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         guiGraphics.fillGradient(0, 0, this.width, this.height, 0xE0101010, 0xE0101010);
+        renderTexturePage(guiGraphics);
+    }
+
+    /** 当前页材质：book 优先用每页材质，否则用条目第一个材质。 */
+    private ResourceLocation currentTexture() {
         if (book) {
-            renderBook(guiGraphics);
-        } else {
-            renderPaper(guiGraphics);
+            List<ResourceLocation> pageTextures = content.pageTextures();
+            if (currentPage < pageTextures.size() && pageTextures.get(currentPage) != null) {
+                return pageTextures.get(currentPage);
+            }
         }
+        return texture;
     }
 
-    /** 当前页材质：每页材质优先，其次条目第一个材质，最后回退原版书。 */
-    private ResourceLocation currentBookTexture() {
-        List<ResourceLocation> pageTextures = content.pageTextures();
-        if (currentPage < pageTextures.size() && pageTextures.get(currentPage) != null) {
-            return pageTextures.get(currentPage);
-        }
-        if (!content.textures().isEmpty()) return content.textures().get(0);
-        return BOOK_TEXTURE;
+    /** 材质按原图比例缩放铺满屏幕（保留边距），透明部分透出深色背景。 */
+    private PageLayout computeLayout(ResourceLocation texture) {
+        int[] size = textureSize(texture);
+        int texW = Math.max(1, size[0]);
+        int texH = Math.max(1, size[1]);
+        int availW = this.width - SCREEN_MARGIN * 2;
+        int availH = this.height - SCREEN_MARGIN * 2;
+        double scale = Math.min((double) availW / texW, (double) availH / texH);
+        int w = Math.max(1, (int) Math.round(texW * scale));
+        int h = Math.max(1, (int) Math.round(texH * scale));
+        return new PageLayout((this.width - w) / 2, (this.height - h) / 2, w, h, texW, texH);
     }
 
-    private void renderBook(GuiGraphics guiGraphics) {
-        int bookX = (this.width - BOOK_WIDTH) / 2;
-        int bookY = 2;
-        ResourceLocation bookTexture = currentBookTexture();
+    /** 从资源读取 PNG 真实尺寸（IHDR 头），失败回退 256x256。 */
+    private static int[] textureSize(ResourceLocation location) {
+        try {
+            Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
+            if (resource.isEmpty()) return new int[]{256, 256};
+            try (InputStream in = resource.get().open()) {
+                byte[] header = new byte[24];
+                int read = 0;
+                while (read < header.length) {
+                    int r = in.read(header, read, header.length - read);
+                    if (r < 0) break;
+                    read += r;
+                }
+                if (read >= header.length
+                        && header[0] == (byte) 'P' && header[1] == (byte) 'N' && header[2] == (byte) 'G') {
+                    int w = ((header[16] & 0xFF) << 24) | ((header[17] & 0xFF) << 16)
+                            | ((header[18] & 0xFF) << 8) | (header[19] & 0xFF);
+                    int h = ((header[20] & 0xFF) << 24) | ((header[21] & 0xFF) << 16)
+                            | ((header[22] & 0xFF) << 8) | (header[23] & 0xFF);
+                    if (w > 0 && h > 0) return new int[]{w, h};
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return new int[]{256, 256};
+    }
+
+    private void renderTexturePage(GuiGraphics guiGraphics) {
+        ResourceLocation tex = currentTexture();
+        PageLayout layout = computeLayout(tex);
         guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-        guiGraphics.blit(bookTexture, bookX, bookY, 0, 0, BOOK_WIDTH, BOOK_HEIGHT, BOOK_WIDTH, BOOK_HEIGHT);
+        guiGraphics.blit(tex, layout.x(), layout.y(), 0, 0, layout.w(), layout.h(), layout.texW(), layout.texH());
+        positionButtons(layout);
 
         String page = pageTexts.get(Math.min(currentPage, pageTexts.size() - 1));
-        List<Line> lines = layoutText(page, 114);
-        int y = bookY + 28;
-        int maxY = bookY + 28 + 15 * LINE_HEIGHT;
-        for (Line line : lines) {
-            if (y >= maxY) break;
-            drawLine(guiGraphics, line, bookX + 36, y);
-            y += line.height();
-        }
-
-        String pageNumber = (currentPage + 1) + "/" + pageTexts.size();
-        guiGraphics.drawString(this.font, pageNumber, bookX + 76, bookY + 176, 0xFF3F2F1F, false);
-    }
-
-    private void renderPaper(GuiGraphics guiGraphics) {
-        int pageWidth = 256;
-        int pageHeight = 256;
-        int x = (this.width - pageWidth) / 2;
-        int y = Math.max(8, (this.height - pageHeight) / 2);
-
-        guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-        guiGraphics.blit(texture, x, y, 0, 0, pageWidth, pageHeight, 256, 256);
 
         if (!titleText.isEmpty()) {
-            guiGraphics.drawString(this.font, titleText, this.width / 2 - this.font.width(titleText) / 2, y + 12, 0xFF3F2F1F, false);
+            guiGraphics.drawString(this.font, titleText,
+                    layout.x() + layout.w() / 2 - this.font.width(titleText) / 2,
+                    layout.y() + (int) (layout.h() * 0.06), 0xFF3F2F1F, false);
         }
 
-        int textX = x + 24;
-        int textY = y + (titleText.isEmpty() ? 20 : 38);
-        int areaWidth = pageWidth - 48;
-        int areaHeight = pageHeight - 76;
+        int textX = layout.x() + (int) (layout.w() * 0.08);
+        int textY = layout.y() + (int) (layout.h() * (titleText.isEmpty() ? 0.12 : 0.18));
+        int areaWidth = Math.max(1, (int) (layout.w() * 0.84));
+        int areaHeight = (int) (layout.h() * 0.72);
 
-        List<Line> lines = layoutText(pageTexts.get(0), areaWidth);
+        List<Line> lines = layoutText(page, areaWidth);
         int totalHeight = 0;
         for (Line line : lines) totalHeight += line.height();
         int maxScroll = Math.max(0, totalHeight - areaHeight);
@@ -199,9 +227,11 @@ public class ReadingScreen extends Screen {
         if (scroll > maxScroll) scroll = maxScroll;
 
         boolean blank = content.id().startsWith("blank:");
-        if (blank && pageTexts.get(0).isEmpty()) {
+        if (blank && page.isEmpty()) {
             Component hint = Component.translatable("broken_chronicles.gui.blank");
-            guiGraphics.drawString(this.font, hint, this.width / 2 - this.font.width(hint) / 2, y + 130, 0x8A8A8A, false);
+            guiGraphics.drawString(this.font, hint,
+                    layout.x() + layout.w() / 2 - this.font.width(hint) / 2,
+                    layout.y() + layout.h() / 2 - 4, 0x8A8A8A, false);
         }
 
         int startY = textY - (int) scroll;
@@ -214,6 +244,25 @@ public class ReadingScreen extends Screen {
             }
             drawLine(guiGraphics, line, textX, lineY);
             lineY += line.height();
+        }
+
+        if (book) {
+            String pageNumber = (currentPage + 1) + "/" + pageTexts.size();
+            guiGraphics.drawString(this.font, pageNumber,
+                    layout.x() + layout.w() / 2 - this.font.width(pageNumber) / 2,
+                    layout.y() + layout.h() - 16, 0xFF3F2F1F, false);
+        }
+    }
+
+    private void positionButtons(PageLayout layout) {
+        if (closeButton != null) {
+            closeButton.setPosition(layout.x() + layout.w() - 18, Math.max(4, layout.y() - 8));
+        }
+        if (prevButton != null) {
+            prevButton.setPosition(layout.x() + 6, layout.y() + layout.h() - 22);
+        }
+        if (nextButton != null) {
+            nextButton.setPosition(layout.x() + layout.w() - 26, layout.y() + layout.h() - 22);
         }
     }
 
@@ -232,7 +281,7 @@ public class ReadingScreen extends Screen {
     private List<Line> layoutText(String text, int maxWidth) {
         List<Line> out = new ArrayList<>();
         if (text == null) return out;
-        for (String rawLine : text.split("\n", -1)) {
+        for (String rawLine : text.split("\\n", -1)) {
             if (rawLine.trim().isEmpty()) {
                 out.add(new Line(List.of(), LINE_HEIGHT));
             } else {
@@ -360,7 +409,7 @@ public class ReadingScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double deltaX, double deltaY) {
-        if (book) {
+        if (book && pageTexts.size() > 1) {
             if (deltaY < 0) flipPage(1);
             else flipPage(-1);
             return true;
