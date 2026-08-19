@@ -7,7 +7,7 @@
   "key.categories.broken_chronicles": "Fragment Chronicle",
   "key.broken_chronicles.read": "Read Text",
   "broken_chronicles.gui.reading": "Reading",
-  "broken_chronicles.gui.collection": "Fragment Chronicle",
+  "broken_chronicles.gui.collection": "Chronicle",
   "broken_chronicles.gui.writing": "Writing",
   "broken_chronicles.gui.done": "Done",
   "broken_chronicles.gui.add_page": "Add Page",
@@ -16,7 +16,7 @@
   "broken_chronicles.gui.title": "Title",
   "broken_chronicles.gui.blank": "(This page is blank)",
   "broken_chronicles.gui.tab.chronicles": "Chronicles",
-  "broken_chronicles.gui.tab.vanilla": "Vanilla Books",
+  "broken_chronicles.gui.tab.vanilla": "Books & Paper",
   "broken_chronicles.gui.untitled": "A Passage on Something",
   "broken_chronicles.gui.type.page": "Page",
   "broken_chronicles.gui.type.book": "Book"

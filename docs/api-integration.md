@@ -116,6 +116,28 @@ ShardEntries.register(ShardEntry.builder(
 
 ---
 
+## 6. 覆盖 UI 文字
+
+收集册界面等 UI 文字都是可翻译 key，其他 MOD / 资源包在自己的语言文件里覆盖同名 key 即可修改，例如：
+
+```json
+{
+  "broken_chronicles.gui.collection": "你的编年史名称",
+  "broken_chronicles.gui.tab.chronicles": "标签一",
+  "broken_chronicles.gui.tab.vanilla": "书与纸"
+}
+```
+
+常用 key：
+
+| key | 默认（zh） | 用途 |
+|---|---|---|
+| `broken_chronicles.gui.collection` | 编年史 | 收集册窗口标题 |
+| `broken_chronicles.gui.tab.chronicles` | 编年史 | 第一个标签页（条目页） |
+| `broken_chronicles.gui.tab.vanilla` | 书与纸 | 第二个标签页（原版书/纸） |
+
+放在你自己 MOD 的 `assets/<命名空间>/lang/zh_cn.json` 等文件（或资源包）即可生效，无需代码。
+
 ## 5. 注意
 
 - `register` 可在 MOD 加载的任何阶段调用；数据包 `/reload` 不会清除代码注册的条目。

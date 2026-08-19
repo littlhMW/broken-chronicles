@@ -7,7 +7,7 @@
   "key.categories.broken_chronicles": "破碎编年史",
   "key.broken_chronicles.read": "阅读文字",
   "broken_chronicles.gui.reading": "阅读",
-  "broken_chronicles.gui.collection": "破碎编年史",
+  "broken_chronicles.gui.collection": "编年史",
   "broken_chronicles.gui.writing": "书写",
   "broken_chronicles.gui.done": "完成",
   "broken_chronicles.gui.add_page": "添加页",
@@ -16,7 +16,7 @@
   "broken_chronicles.gui.title": "标题",
   "broken_chronicles.gui.blank": "（这张纸是空白的）",
   "broken_chronicles.gui.tab.chronicles": "编年史",
-  "broken_chronicles.gui.tab.vanilla": "原版书",
+  "broken_chronicles.gui.tab.vanilla": "书与纸",
   "broken_chronicles.gui.untitled": "于某物上的一段文字",
   "broken_chronicles.gui.type.page": "纸张",
   "broken_chronicles.gui.type.book": "书本"
