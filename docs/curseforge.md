@@ -34,4 +34,4 @@
 <p>See <code>docs/data-format.md</code> and <code>docs/api-integration.md</code> in the repository for entry formats, loot table injection, and the integration API.</p>
 
 <h2>License</h2>
-<p>MIT</p>
+<p>CC BY-NC 4.0 (Attribution-NonCommercial 4.0 International)</p>

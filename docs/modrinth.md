@@ -37,4 +37,4 @@ See `docs/data-format.md` and `docs/api-integration.md` in the repo for entry fo
 
 ## License
 
-MIT
+CC BY-NC 4.0 (Attribution-NonCommercial 4.0 International)

@@ -50,4 +50,4 @@ The jar is produced in `build/libs/`.
 
 ## License
 
-MIT
+CC BY-NC 4.0 (Attribution-NonCommercial 4.0 International)
