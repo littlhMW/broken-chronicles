@@ -141,7 +141,7 @@ ShardEntries.register(ShardEntry.builder(
 ## 5. 注意
 
 - `register` 可在 MOD 加载的任何阶段调用；数据包 `/reload` 不会清除代码注册的条目。
-- 书（book）页材质按 192×192 绘制；纸页（page/tag）材质按 256×256 绘制。
+- 阅读材质画布统一横屏 **512×288（16:9）**；显示时按材质**非透明区域**裁剪缩放居中，非透明区域多大就显示多大（满屏或小图均可）。
 - 文本支持 markdown（`#` 标题、`**粗体**`、`*斜体*`、`>` 引用、`-` 列表、`---` 分隔线）
-  与图标引用 `[item:minecraft:apple]`、`[block:minecraft:stone]`、`[entity:minecraft:cow]`、`[effect:minecraft:strength]`。
+  与图标引用 `[item:minecraft:apple]`（目前只支持 item 图标）。
 - 若想被其他整合包/玩家覆盖，请把条目做成数据包形式而不是代码注册（数据包优先级更高）。

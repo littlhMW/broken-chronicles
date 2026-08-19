@@ -7,30 +7,25 @@ import littlh.broken_chronicles.content.EntryType;
 import littlh.broken_chronicles.content.MarkdownParser;
 import littlh.broken_chronicles.content.ResolvedContent;
 import littlh.broken_chronicles.network.C2SShardRead;
+import com.mojang.blaze3d.platform.NativeImage;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.SpawnEggItem;
-import net.minecraft.world.item.alchemy.PotionContents;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,16 +33,21 @@ import java.util.regex.Pattern;
 /**
  * 阅读界面：page/tag/book 统一用「材质背景 + 文字」样式渲染。
  * page/tag 单页滚动；book 多页，同一样式下加翻页（按钮 / 滚轮 / 每页独立材质）。
- * 材质按原图比例缩放铺满屏幕，透明背景部分透出深色底。
+ * 材质画布统一横屏（16:9），显示时按材质非透明区域裁剪缩放居中：非透明区域大则铺满屏幕，小则小图。
  * 原版成书走原版 BookViewScreen，不经过本界面。
  * 打开即自动发送阅读（收录）包。
  */
 public class ReadingScreen extends Screen {
+    /** 材质画布统一横屏尺寸（16:9）。非透明区域多大就显示多大。 */
+    private static final int CANVAS_WIDTH = 512;
+    private static final int CANVAS_HEIGHT = 288;
     private static final int LINE_HEIGHT = 9;
     private static final int ICON_WIDTH = 18;
     private static final int ICON_HEIGHT = 18;
     private static final int SCREEN_MARGIN = 24;
-    private static final Pattern ICON_PATTERN = Pattern.compile("\\[(item|block|entity|effect):([a-zA-Z0-9_.:/\\-]+)]");
+    private static final Pattern ICON_PATTERN = Pattern.compile("\\[item:([a-zA-Z0-9_.:/\\-]+)]");
+    /** 材质路径 -> {texW, texH, minX, minY, maxX, maxY} 非透明区域。 */
+    private static final Map<ResourceLocation, int[]> TEXTURE_BOUNDS = new HashMap<>();
 
     /** 一个布局段：文本或图标。 */
     private record Segment(boolean icon, Component text, ItemStack stack, int width) {
@@ -57,8 +57,8 @@ public class ReadingScreen extends Screen {
     private record Line(List<Segment> segments, int height) {
     }
 
-    /** 材质在屏幕上的绘制位置与原始像素尺寸。 */
-    private record PageLayout(int x, int y, int w, int h, int texW, int texH) {
+    /** 材质在屏幕上的绘制位置、画布尺寸与非透明区域。 */
+    private record PageLayout(int x, int y, int w, int h, int u, int v, int uw, int vh, int texW, int texH) {
     }
 
     private final ItemStack source;
@@ -159,51 +159,64 @@ public class ReadingScreen extends Screen {
         return texture;
     }
 
-    /** 材质按原图比例缩放铺满屏幕（保留边距），透明部分透出深色背景。 */
+    /** 按材质非透明区域缩放居中（保留边距）：非透明区域多大就显示多大，透明部分透出深色底。 */
     private PageLayout computeLayout(ResourceLocation texture) {
-        int[] size = textureSize(texture);
-        int texW = Math.max(1, size[0]);
-        int texH = Math.max(1, size[1]);
+        int[] b = textureBounds(texture);
+        int texW = Math.max(1, b[0]);
+        int texH = Math.max(1, b[1]);
+        int minX = b[2];
+        int minY = b[3];
+        int maxX = Math.max(minX + 1, b[4]);
+        int maxY = Math.max(minY + 1, b[5]);
+        int uw = maxX - minX;
+        int vh = maxY - minY;
         int availW = this.width - SCREEN_MARGIN * 2;
         int availH = this.height - SCREEN_MARGIN * 2;
-        double scale = Math.min((double) availW / texW, (double) availH / texH);
-        int w = Math.max(1, (int) Math.round(texW * scale));
-        int h = Math.max(1, (int) Math.round(texH * scale));
-        return new PageLayout((this.width - w) / 2, (this.height - h) / 2, w, h, texW, texH);
+        double scale = Math.min((double) availW / uw, (double) availH / vh);
+        int w = Math.max(1, (int) Math.round(uw * scale));
+        int h = Math.max(1, (int) Math.round(vh * scale));
+        return new PageLayout((this.width - w) / 2, (this.height - h) / 2, w, h, minX, minY, uw, vh, texW, texH);
     }
 
-    /** 从资源读取 PNG 真实尺寸（IHDR 头），失败回退 256x256。 */
-    private static int[] textureSize(ResourceLocation location) {
+    /** 读取材质像素，计算非透明区域边界（texW, texH, minX, minY, maxX, maxY），带缓存；失败回退整个画布。 */
+    private static int[] textureBounds(ResourceLocation location) {
+        int[] cached = TEXTURE_BOUNDS.get(location);
+        if (cached != null) return cached;
+        int[] fallback = new int[]{CANVAS_WIDTH, CANVAS_HEIGHT, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT};
         try {
             Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
-            if (resource.isEmpty()) return new int[]{256, 256};
-            try (InputStream in = resource.get().open()) {
-                byte[] header = new byte[24];
-                int read = 0;
-                while (read < header.length) {
-                    int r = in.read(header, read, header.length - read);
-                    if (r < 0) break;
-                    read += r;
+            if (resource.isEmpty()) return fallback;
+            try (InputStream in = resource.get().open(); NativeImage image = NativeImage.read(in)) {
+                int w = image.getWidth();
+                int h = image.getHeight();
+                if (w <= 0 || h <= 0) return fallback;
+                int minX = w, minY = h, maxX = -1, maxY = -1;
+                for (int y = 0; y < h; y++) {
+                    for (int x = 0; x < w; x++) {
+                        if (((image.getPixelRGBA(x, y) >>> 24) & 0xFF) > 0) {
+                            if (x < minX) minX = x;
+                            if (x > maxX) maxX = x;
+                            if (y < minY) minY = y;
+                            if (y > maxY) maxY = y;
+                        }
+                    }
                 }
-                if (read >= header.length
-                        && header[0] == (byte) 'P' && header[1] == (byte) 'N' && header[2] == (byte) 'G') {
-                    int w = ((header[16] & 0xFF) << 24) | ((header[17] & 0xFF) << 16)
-                            | ((header[18] & 0xFF) << 8) | (header[19] & 0xFF);
-                    int h = ((header[20] & 0xFF) << 24) | ((header[21] & 0xFF) << 16)
-                            | ((header[22] & 0xFF) << 8) | (header[23] & 0xFF);
-                    if (w > 0 && h > 0) return new int[]{w, h};
-                }
+                if (maxX < 0) return fallback;
+                int[] bounds = new int[]{w, h, minX, minY, maxX + 1, maxY + 1};
+                TEXTURE_BOUNDS.put(location, bounds);
+                return bounds;
             }
         } catch (Exception ignored) {
+            return fallback;
         }
-        return new int[]{256, 256};
     }
 
     private void renderTexturePage(GuiGraphics guiGraphics) {
         ResourceLocation tex = currentTexture();
         PageLayout layout = computeLayout(tex);
         guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-        guiGraphics.blit(tex, layout.x(), layout.y(), 0, 0, layout.w(), layout.h(), layout.texW(), layout.texH());
+        guiGraphics.blit(tex, layout.x(), layout.y(), layout.w(), layout.h(),
+                layout.u(), layout.v(), layout.uw(), layout.vh(), layout.texW(), layout.texH());
         positionButtons(layout);
 
         String page = pageTexts.get(Math.min(currentPage, pageTexts.size() - 1));
@@ -291,14 +304,14 @@ public class ReadingScreen extends Screen {
         return out;
     }
 
-    /** 解析一行：把 [item:...] 等引用拆成图标段，其余文本交给 markdown 渲染。 */
+    /** 解析一行：把 [item:...] 引用拆成图标段，其余文本交给 markdown 渲染。 */
     private List<Segment> parseSegments(String line) {
         List<Segment> out = new ArrayList<>();
         Matcher matcher = ICON_PATTERN.matcher(line);
         int last = 0;
         while (matcher.find()) {
             if (matcher.start() > last) out.add(textSegment(line.substring(last, matcher.start())));
-            out.add(iconSegment(matcher.group(1), matcher.group(2)));
+            out.add(iconSegment(matcher.group(1)));
             last = matcher.end();
         }
         if (last < line.length()) out.add(textSegment(line.substring(last)));
@@ -311,52 +324,26 @@ public class ReadingScreen extends Screen {
         return new Segment(false, component, ItemStack.EMPTY, this.font.width(component));
     }
 
-    private Segment iconSegment(String kind, String id) {
-        ItemStack stack = resolveIcon(kind, id);
+    private Segment iconSegment(String id) {
+        ItemStack stack = resolveIcon(id);
         if (stack == null || stack.isEmpty()) {
-            return textSegment("[" + kind + ":" + id + "]");
+            return textSegment("[item:" + id + "]");
         }
         return new Segment(true, Component.empty(), stack, ICON_WIDTH);
     }
 
-    /** 把引用 id 解析成要显示的物品图标（实体用刷怪蛋，效果用药水）。 */
-    private ItemStack resolveIcon(String kind, String id) {
+    /** 把 item 引用 id 解析成要显示的物品图标。 */
+    private ItemStack resolveIcon(String id) {
         ResourceLocation location = ResourceLocation.tryParse(id);
         if (location == null) return null;
-        switch (kind) {
-            case "item", "block" -> {
-                // 床有 16 种颜色变体，没有 minecraft:bed 物品，统一映射到红色床
-                if ("minecraft:bed".equals(id)) id = "minecraft:red_bed";
-                Item item = null;
-                if (BuiltInRegistries.ITEM.containsKey(location)) {
-                    item = BuiltInRegistries.ITEM.get(location);
-                }
-                if ((item == null || item == Items.AIR) && BuiltInRegistries.BLOCK.containsKey(location)) {
-                    Block block = BuiltInRegistries.BLOCK.get(location);
-                    if (block != null && block != Blocks.AIR) item = block.asItem();
-                }
-                if (item == null || item == Items.AIR) return null;
-                return new ItemStack(item);
-            }
-            case "entity" -> {
-                if (!BuiltInRegistries.ENTITY_TYPE.containsKey(location)) return null;
-                EntityType<?> type = BuiltInRegistries.ENTITY_TYPE.get(location);
-                SpawnEggItem egg = SpawnEggItem.byId(type);
-                if (egg != null) return new ItemStack(egg);
-                return new ItemStack(Items.NAME_TAG);
-            }
-            case "effect" -> {
-                var holder = BuiltInRegistries.MOB_EFFECT.getHolder(location);
-                if (holder.isEmpty()) return null;
-                ItemStack potion = new ItemStack(Items.POTION);
-                potion.set(DataComponents.POTION_CONTENTS, new PotionContents(Optional.empty(), Optional.empty(),
-                        List.of(new MobEffectInstance(holder.get(), 3600))));
-                return potion;
-            }
-            default -> {
-                return null;
-            }
+        // 床有 16 种颜色变体，没有 minecraft:bed 物品，统一映射到红色床
+        if ("minecraft:bed".equals(id)) id = "minecraft:red_bed";
+        Item item = null;
+        if (BuiltInRegistries.ITEM.containsKey(location)) {
+            item = BuiltInRegistries.ITEM.get(location);
         }
+        if (item == null || item == Items.AIR) return null;
+        return new ItemStack(item);
     }
 
     /** 把一段段列表按 maxWidth 折行。 */

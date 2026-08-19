@@ -16,7 +16,7 @@
 - **Light-up entries** — revealable entries show as `???` until discovered; optional auto-unlock on login.
 - **Writing ink** — craft *Lost Ink* (ink sac + glow ink sac + feather) and write your own pages, books, or item tags with a full multi-page editor (vanilla book & quill UI).
 - **Library** — inject entries into any loot table via the entry `loot_tables` field, or centrally via `data/<ns>/shards_loot/*.json` / `config/broken_chronicles/loot.json`.
-- **Fully data-driven** — datapack entries, per-page textures, per-language texts (`zh_cn` / `en_us`), markdown formatting, and item/block/entity/effect icons.
+- **Fully data-driven** — datapack entries, per-page textures, per-language texts (`zh_cn` / `en_us`), markdown formatting, and item icons (`[item:minecraft:apple]`).
 - **Integration API** — use Broken Chronicles as a dependency and register entries from code via `ShardEntries.register(ShardEntry.builder(...))`.
 
 ## Requirements
