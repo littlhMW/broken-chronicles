@@ -19,7 +19,7 @@
 
 ```json
 {
-  "texture": "broken_chronicles:textures/gui/page/diary.png",
+  "texture": "broken_chronicles:textures/gui/page/oldpaper.png",
   "title": { "zh_cn": "泛黄的日记", "en_us": "Yellowed Diary" },
   "text": { "zh_cn": "正文……", "en_us": "Body text..." },
   "reveal": true
@@ -30,7 +30,7 @@
 
 ```json
 {
-  "texture": "broken_chronicles:textures/gui/page/leaf.png",
+  "texture": "broken_chronicles:textures/gui/page/oldpaper_blood1.png",
   "title": { "zh_cn": "风与叶之书", "en_us": "Book of Wind and Leaves" },
   "pages": [
     { "zh_cn": "第一页", "en_us": "First page" },
@@ -44,7 +44,7 @@
 
 ```json
 {
-  "texture": "broken_chronicles:textures/gui/page/diary.png",
+  "texture": "broken_chronicles:textures/gui/page/oldpaper.png",
   "title": "一本特定书名",
   "pages": ["……"],
   "item": { "title": "我的日记", "author": "Steve" }
@@ -55,7 +55,7 @@
 
 ```json
 {
-  "texture": "broken_chronicles:textures/gui/page/scrap.png",
+  "texture": "broken_chronicles:textures/gui/page/oldpaper_blood3.png",
   "title": { "zh_cn": "树上的刻字", "en_us": "Carving on the Tree" },
   "text": { "zh_cn": "……", "en_us": "..." },
   "reveal": true

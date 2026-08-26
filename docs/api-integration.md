@@ -45,7 +45,7 @@ import java.util.Map;
 ShardEntries.register(ShardEntry.builder(
                 ResourceLocation.fromNamespaceAndPath("your_mod_id", "diary_page"),
                 EntryType.PAGE)
-        .texture("broken_chronicles:textures/gui/page/diary.png")
+        .texture("broken_chronicles:textures/gui/page/oldpaper.png")
         .title(Map.of("zh_cn", "泛黄的日记", "en_us", "Yellowed Diary"))
         .text(Map.of("zh_cn", "正文，支持 markdown 与 [item:minecraft:apple] 图标引用。",
                      "en_us", "Body text, supports markdown and [item:minecraft:apple] icons."))
@@ -116,6 +116,13 @@ ShardEntries.register(ShardEntry.builder(
 
 ---
 
+## 5. 注意
+
+- `register` 可在 MOD 加载的任何阶段调用；数据包 `/reload` 不会清除代码注册的条目。
+- 阅读材质画布统一横屏 **512×288（16:9）**；显示时按材质**非透明区域**裁剪缩放居中，非透明区域多大就显示多大（满屏或小图均可）。
+- 文本支持 markdown（`#` 标题、`**粗体**`、`*斜体*`、`>` 引用、`-` 列表、`---` 分隔线）
+  与图标引用 `[item:minecraft:apple]`（目前只支持 item 图标）。
+- 若想被其他整合包/玩家覆盖，请把条目做成数据包形式而不是代码注册（数据包优先级更高）。
 ## 6. 覆盖 UI 文字
 
 收集册界面等 UI 文字都是可翻译 key，其他 MOD / 资源包在自己的语言文件里覆盖同名 key 即可修改，例如：
@@ -138,10 +145,3 @@ ShardEntries.register(ShardEntry.builder(
 
 放在你自己 MOD 的 `assets/<命名空间>/lang/zh_cn.json` 等文件（或资源包）即可生效，无需代码。
 
-## 5. 注意
-
-- `register` 可在 MOD 加载的任何阶段调用；数据包 `/reload` 不会清除代码注册的条目。
-- 阅读材质画布统一横屏 **512×288（16:9）**；显示时按材质**非透明区域**裁剪缩放居中，非透明区域多大就显示多大（满屏或小图均可）。
-- 文本支持 markdown（`#` 标题、`**粗体**`、`*斜体*`、`>` 引用、`-` 列表、`---` 分隔线）
-  与图标引用 `[item:minecraft:apple]`（目前只支持 item 图标）。
-- 若想被其他整合包/玩家覆盖，请把条目做成数据包形式而不是代码注册（数据包优先级更高）。

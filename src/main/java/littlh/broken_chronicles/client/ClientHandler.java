@@ -63,7 +63,7 @@ public final class ClientHandler {
         if (mc.screen instanceof AbstractContainerScreen<?> screen) {
             Slot slot = screen.getSlotUnderMouse();
             if (slot != null && slot.hasItem()) {
-                LOGGER.info("[破碎编年史] screen key N pressed, hovered slot stack={}", slot.getItem());
+                LOGGER.debug("[破碎编年史] screen key N pressed, hovered slot stack={}", slot.getItem());
                 openByStack(slot.getItem());
                 event.setCanceled(true);
             }
@@ -75,7 +75,7 @@ public final class ClientHandler {
     public static void onGatherTooltip(RenderTooltipEvent.GatherComponents event) {
         ItemStack stack = event.getItemStack();
         CompoundTag shard = ShardContentHelper.getShard(stack);
-        LOGGER.info("[破碎编年史] tooltip stack={} hasShard={} shard={}", stack, shard != null, shard);
+        LOGGER.debug("[破碎编年史] tooltip stack={} hasShard={} shard={}", stack, shard != null, shard);
         if (shard == null) return;
         String title = shard.getString("title");
         if (title.isEmpty()) {
@@ -101,7 +101,7 @@ public final class ClientHandler {
     /** N 键：物品栏悬浮或手持时阅读。 */
     private static void handleReadKey() {
         while (ModKeyMappings.READ.consumeClick()) {
-            LOGGER.info("[破碎编年史] N key consumed, screen={}", Minecraft.getInstance().screen);
+            LOGGER.debug("[破碎编年史] N key consumed, screen={}", Minecraft.getInstance().screen);
             Minecraft mc = Minecraft.getInstance();
             if (mc.player == null) return;
 
@@ -110,7 +110,7 @@ public final class ClientHandler {
                     Slot slot = screen.getSlotUnderMouse();
                     if (slot != null && slot.hasItem()) {
                         ItemStack stack = slot.getItem();
-                        LOGGER.info("[破碎编年史] hovered slot stack={}", stack);
+                        LOGGER.debug("[破碎编年史] hovered slot stack={}", stack);
                         openByStack(stack);
                     }
                 }
@@ -118,7 +118,7 @@ public final class ClientHandler {
             }
 
             ItemStack main = mc.player.getMainHandItem();
-            LOGGER.info("[破碎编年史] main hand {}", main);
+            LOGGER.debug("[破碎编年史] main hand {}", main);
             if (!main.isEmpty()) {
                 openByStack(main);
                 return;
@@ -151,7 +151,7 @@ public final class ClientHandler {
             return;
         }
         Optional<ResolvedContent> resolved = ShardContentResolver.resolve(stack, level.registryAccess());
-        LOGGER.info("[破碎编年史] openByStack stack={} resolved={} id={}", stack, resolved.isPresent(),
+        LOGGER.debug("[破碎编年史] openByStack stack={} resolved={} id={}", stack, resolved.isPresent(),
                 resolved.map(r -> r.id()).orElse("-"));
         if (resolved.isPresent()) {
             mc.setScreen(new ReadingScreen(stack.copy(), resolved.get()));

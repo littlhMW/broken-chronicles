@@ -11,6 +11,7 @@ import littlh.broken_chronicles.content.ShardEntry;
 import littlh.broken_chronicles.network.GenericEntryDto;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.core.HolderLookup;
@@ -82,7 +83,32 @@ public class CollectionScreen extends Screen {
             if (!chronicleSide && !vanillaSide) continue;
             EntryType type = EntryType.fromString(dto.type());
             List<Localized> pages = dto.pages().stream().map(Localized::of).toList();
-            rows.add(new Row(new ResolvedContent(dto.id(), type, Localized.of(dto.title()), pages, List.of(), false), false));
+            List<ResourceLocation> textures = new ArrayList<>();
+            List<ResourceLocation> pageTextures = new ArrayList<>();
+            if (type == EntryType.BOOK) {
+                for (int i = 0; i < dto.pages().size(); i++) {
+                    String t = i < dto.textures().size() ? dto.textures().get(i) : "";
+                    if (t != null && !t.isEmpty()) {
+                        try {
+                            pageTextures.add(ResourceLocation.parse(t));
+                        } catch (Exception ignored) {
+                            pageTextures.add(null);
+                        }
+                    } else {
+                        pageTextures.add(null);
+                    }
+                }
+            } else {
+                for (String t : dto.textures()) {
+                    if (t != null && !t.isEmpty()) {
+                        try {
+                            textures.add(ResourceLocation.parse(t));
+                        } catch (Exception ignored) {
+                        }
+                    }
+                }
+            }
+            rows.add(new Row(new ResolvedContent(dto.id(), type, Localized.of(dto.title()), pages, textures, pageTextures, false), false));
         }
     }
 
@@ -109,14 +135,14 @@ public class CollectionScreen extends Screen {
         guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
         guiGraphics.blit(BACKGROUND, bgX, bgY, 0, 0, BG_SIZE, BG_SIZE, 256, 256);
         Component header = Component.translatable("broken_chronicles.gui.collection");
-        guiGraphics.drawString(this.font, header, this.width / 2 - this.font.width(header) / 2, bgY + 14, 0xFFFFFFFF, false);
+        guiGraphics.drawString(this.font, header, this.width / 2 - this.font.width(header) / 2, bgY + 22, 0xFFFFFFFF, false);
 
         renderTabs(guiGraphics, mouseX, mouseY);
 
         int listX = bgX + 16;
-        int listY = bgY + 54;
+        int listY = bgY + 62;
         int listW = BG_SIZE - 32;
-        int listH = BG_SIZE - 64;
+        int listH = BG_SIZE - 82;
 
         int maxScroll = Math.max(0, rows.size() * ROW_HEIGHT - listH);
         if (scroll < 0) scroll = 0;
@@ -142,17 +168,20 @@ public class CollectionScreen extends Screen {
         }
     }
 
+    /** 标签页用原版按钮材质绘制：选中/悬停显示高亮态。 */
     private void renderTabs(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         int x = bgX() + 16;
-        int tabY = bgY() + 30;
+        int tabY = bgY() + 40;
         for (int t = 0; t < 2; t++) {
             Component label = Component.translatable(t == TAB_CHRONICLES
                     ? "broken_chronicles.gui.tab.chronicles" : "broken_chronicles.gui.tab.vanilla");
             int w = this.font.width(label) + 20;
             boolean selected = this.tab == t;
             boolean hovered = mouseX >= x && mouseX < x + w && mouseY >= tabY && mouseY < tabY + TAB_H;
-            guiGraphics.fill(x, tabY, x + w, tabY + TAB_H, selected ? 0xFFC9A25E : (hovered ? 0xFF8A7350 : 0xFF5C4A33));
-            guiGraphics.drawString(this.font, label, x + 10, tabY + 5, 0xFFFFFFFF, false);
+            guiGraphics.blitSprite(ResourceLocation.withDefaultNamespace(selected || hovered
+                    ? "widget/button_highlighted" : "widget/button"), x, tabY, w, TAB_H);
+            guiGraphics.drawString(this.font, label,
+                    x + w / 2 - this.font.width(label) / 2, tabY + (TAB_H - 8) / 2, 0xFFFFFFFF, false);
             x += w + 4;
         }
     }
@@ -176,7 +205,7 @@ public class CollectionScreen extends Screen {
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button == 0) {
-            int tabY = bgY() + 30;
+            int tabY = bgY() + 40;
             if (mouseY >= tabY && mouseY < tabY + TAB_H) {
                 int x = bgX() + 16;
                 for (int t = 0; t < 2; t++) {
@@ -192,9 +221,9 @@ public class CollectionScreen extends Screen {
             }
 
             int listX = bgX() + 16;
-            int listY = bgY() + 54;
+            int listY = bgY() + 62;
             int listW = BG_SIZE - 32;
-            int listH = BG_SIZE - 64;
+            int listH = BG_SIZE - 82;
             if (mouseX >= listX && mouseX < listX + listW && mouseY >= listY && mouseY < listY + listH) {
                 int index = ((int) mouseY - listY + scroll) / ROW_HEIGHT;
                 if (index >= 0 && index < rows.size()) {

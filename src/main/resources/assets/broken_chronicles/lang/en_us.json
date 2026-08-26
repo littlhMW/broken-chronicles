@@ -19,5 +19,21 @@
   "broken_chronicles.gui.tab.vanilla": "Books & Paper",
   "broken_chronicles.gui.untitled": "A Passage on Something",
   "broken_chronicles.gui.type.page": "Page",
-  "broken_chronicles.gui.type.book": "Book"
+  "broken_chronicles.gui.type.book": "Book",
+  "advancements.broken_chronicles.chronicles.root.title": "These Scattered Legends",
+  "advancements.broken_chronicles.chronicles.root.desc": "Craft a Fragment Chronicle",
+  "advancements.broken_chronicles.chronicles.first_entry.title": "Once Upon a Time",
+  "advancements.broken_chronicles.chronicles.first_entry.desc": "Collect your first entry",
+  "advancements.broken_chronicles.chronicles.first_page.title": "Balladeer",
+  "advancements.broken_chronicles.chronicles.first_page.desc": "Collect your first Page",
+  "advancements.broken_chronicles.chronicles.first_book.title": "Book Chaser",
+  "advancements.broken_chronicles.chronicles.first_book.desc": "Collect your first Tome",
+  "advancements.broken_chronicles.chronicles.first_tag.title": "Inscriber",
+  "advancements.broken_chronicles.chronicles.first_tag.desc": "Collect your first Tag",
+  "advancements.broken_chronicles.chronicles.first_vanilla_book.title": "The Librarian Cannot Read",
+  "advancements.broken_chronicles.chronicles.first_vanilla_book.desc": "Collect your first vanilla book",
+  "advancements.broken_chronicles.chronicles.first_named_paper.title": "Is It Written on the Side?",
+  "advancements.broken_chronicles.chronicles.first_named_paper.desc": "Collect your first named paper",
+  "advancements.broken_chronicles.chronicles.all_types.title": "Library of Ruins",
+  "advancements.broken_chronicles.chronicles.all_types.desc": "Collect every type of entry"
 }

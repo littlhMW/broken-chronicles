@@ -1,0 +1,30 @@
+{
+  "display": {
+    "icon": {
+      "id": "broken_chronicles:collection_book"
+    },
+    "title": {
+      "translate": "advancements.broken_chronicles.chronicles.root.title"
+    },
+    "description": {
+      "translate": "advancements.broken_chronicles.chronicles.root.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false,
+    "background": "minecraft:textures/block/stripped_birch_log.png"
+  },
+  "criteria": {
+    "obtain": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "broken_chronicles:collection_book"
+          }
+        ]
+      }
+    }
+  }
+}

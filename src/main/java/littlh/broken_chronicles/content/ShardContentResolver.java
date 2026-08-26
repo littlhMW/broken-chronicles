@@ -52,7 +52,7 @@ public final class ShardContentResolver {
                 if (!nameStr.isEmpty()) {
                     String hash = sha256("paper\u0000" + nameStr).substring(0, 24);
                     ResourceLocation paperTexture =
-                            ResourceLocation.fromNamespaceAndPath("broken_chronicles", "textures/gui/page/scrap.png");
+                            ResourceLocation.fromNamespaceAndPath("broken_chronicles", "textures/gui/page/oldpaper.png");
                     return Optional.of(new ResolvedContent("named_paper:" + hash, EntryType.PAGE,
                             Localized.of(nameStr), List.of(Localized.of(nameStr)), List.of(paperTexture), false));
                 }
@@ -108,10 +108,27 @@ public final class ShardContentResolver {
         }
 
         List<ResourceLocation> textures = new ArrayList<>();
+        List<ResourceLocation> pageTextures = new ArrayList<>();
         if (shard.contains("textures", Tag.TAG_LIST)) {
             ListTag list = shard.getList("textures", Tag.TAG_STRING);
-            for (int i = 0; i < list.size(); i++) {
-                textures.add(ResourceLocation.parse(list.getString(i)));
+            if (type != EntryType.BOOK) {
+                // page/tag：单个材质直接作为正文背景
+                for (int i = 0; i < list.size(); i++) {
+                    String t = list.getString(i);
+                    if (t != null && !t.isEmpty()) {
+                        try {
+                            textures.add(ResourceLocation.parse(t));
+                        } catch (Exception ignored) {
+                        }
+                    }
+                }
+            }
+            // book：每页材质与页一一对应，空串表示用默认材质
+            if (type == EntryType.BOOK) {
+                for (int i = 0; i < rawPages.size(); i++) {
+                    String t = i < list.size() ? list.getString(i) : "";
+                    pageTextures.add(t == null || t.isEmpty() ? null : ResourceLocation.parse(t));
+                }
             }
         }
 
@@ -119,7 +136,7 @@ public final class ShardContentResolver {
         String id = "inline:" + sha256(key).substring(0, 24);
 
         List<Localized> pages = rawPages.stream().map(Localized::of).toList();
-        return new ResolvedContent(id, type, Localized.of(title), pages, textures, false);
+        return new ResolvedContent(id, type, Localized.of(title), pages, textures, pageTextures, false);
     }
 
     private static String sha256(String input) {

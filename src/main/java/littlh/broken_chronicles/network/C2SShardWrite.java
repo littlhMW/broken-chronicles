@@ -10,7 +10,7 @@ import net.minecraft.resources.ResourceLocation;
 import java.util.List;
 
 /** 客户端：用破碎墨水书写完成。mode = page / book / tag。 */
-public record C2SShardWrite(String mode, String title, List<String> pages) implements CustomPacketPayload {
+public record C2SShardWrite(String mode, String title, List<String> pages, List<String> textures) implements CustomPacketPayload {
 
     public static final CustomPacketPayload.Type<C2SShardWrite> TYPE =
             new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(ModMindEntry.MOD_ID, "shard_write"));
@@ -19,6 +19,7 @@ public record C2SShardWrite(String mode, String title, List<String> pages) imple
             ByteBufCodecs.STRING_UTF8, C2SShardWrite::mode,
             ByteBufCodecs.STRING_UTF8, C2SShardWrite::title,
             ByteBufCodecs.<ByteBuf, String>list().apply(ByteBufCodecs.STRING_UTF8), C2SShardWrite::pages,
+            ByteBufCodecs.<ByteBuf, String>list().apply(ByteBufCodecs.STRING_UTF8), C2SShardWrite::textures,
             C2SShardWrite::new);
 
     @Override

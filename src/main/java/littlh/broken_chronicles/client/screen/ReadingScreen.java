@@ -3,6 +3,7 @@ package littlh.broken_chronicles.client.screen;
 import littlh.broken_chronicles.ModConfig;
 import littlh.broken_chronicles.ModMindEntry;
 import littlh.broken_chronicles.client.ClientCollectionState;
+import littlh.broken_chronicles.client.ModKeyMappings;
 import littlh.broken_chronicles.content.EntryType;
 import littlh.broken_chronicles.content.MarkdownParser;
 import littlh.broken_chronicles.content.ResolvedContent;
@@ -14,6 +15,8 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.Style;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.world.item.Item;
@@ -44,10 +47,17 @@ public class ReadingScreen extends Screen {
     private static final int LINE_HEIGHT = 9;
     private static final int ICON_WIDTH = 18;
     private static final int ICON_HEIGHT = 18;
-    private static final int SCREEN_MARGIN = 24;
+    private static final int SCREEN_MARGIN = 0; // 页边距：0 = 材质按 100% 屏幕显示
+    /** 正文中的按键占位符，渲染时替换为玩家实际绑定的阅读键。 */
+    private static final String READ_KEY_PLACEHOLDER = "%READ_KEY%";
     private static final Pattern ICON_PATTERN = Pattern.compile("\\[item:([a-zA-Z0-9_.:/\\-]+)]");
     /** 材质路径 -> {texW, texH, minX, minY, maxX, maxY} 非透明区域。 */
     private static final Map<ResourceLocation, int[]> TEXTURE_BOUNDS = new HashMap<>();
+
+    /** 资源包重载后清空材质边界缓存（F3+T、切换资源包后重新计算）。 */
+    public static void invalidateTextureCache() {
+        TEXTURE_BOUNDS.clear();
+    }
 
     /** 一个布局段：文本或图标。 */
     private record Segment(boolean icon, Component text, ItemStack stack, int width) {
@@ -57,8 +67,9 @@ public class ReadingScreen extends Screen {
     private record Line(List<Segment> segments, int height) {
     }
 
-    /** 材质在屏幕上的绘制位置、画布尺寸与非透明区域。 */
-    private record PageLayout(int x, int y, int w, int h, int u, int v, int uw, int vh, int texW, int texH) {
+    /** 材质在屏幕上的绘制位置、画布尺寸与非透明区域（content = 非透明区域映射到屏幕后的位置）。 */
+    private record PageLayout(int x, int y, int w, int h, int u, int v, int uw, int vh, int texW, int texH,
+                              int contentX, int contentY, int contentW, int contentH) {
     }
 
     private final ItemStack source;
@@ -89,6 +100,7 @@ public class ReadingScreen extends Screen {
         this.titleText = content.title() != null ? content.title().resolve(language) : "";
         for (var page : content.pages()) {
             String resolved = plainText(page.resolve(language));
+            resolved = resolved.replace(READ_KEY_PLACEHOLDER, readKeyName());
             if (!resolved.isEmpty()) pageTexts.add(resolved);
         }
         if (pageTexts.isEmpty()) pageTexts.add("");
@@ -113,13 +125,13 @@ public class ReadingScreen extends Screen {
         }
         PageLayout layout = computeLayout(currentTexture());
         this.closeButton = Button.builder(Component.literal("X"), b -> onClose())
-                .bounds(layout.x() + layout.w() - 18, Math.max(4, layout.y() - 8), 16, 14).build();
+                .bounds(layout.contentX() + layout.contentW() - 18, Math.max(4, layout.contentY() - 8), 16, 14).build();
         this.addRenderableWidget(closeButton);
         if (book && pageTexts.size() > 1) {
             this.prevButton = Button.builder(Component.literal("<"), b -> flipPage(-1))
-                    .bounds(layout.x() + 6, layout.y() + layout.h() - 22, 20, 16).build();
+                    .bounds(layout.contentX() + 6, layout.contentY() + layout.contentH() - 22, 20, 16).build();
             this.nextButton = Button.builder(Component.literal(">"), b -> flipPage(1))
-                    .bounds(layout.x() + layout.w() - 26, layout.y() + layout.h() - 22, 20, 16).build();
+                    .bounds(layout.contentX() + layout.contentW() - 26, layout.contentY() + layout.contentH() - 22, 20, 16).build();
             this.addRenderableWidget(prevButton);
             this.addRenderableWidget(nextButton);
         }
@@ -148,18 +160,19 @@ public class ReadingScreen extends Screen {
         renderTexturePage(guiGraphics);
     }
 
-    /** 当前页材质：book 优先用每页材质，否则用条目第一个材质。 */
+    /** 当前页材质：book 优先用每页材质，否则用条目第一个材质；材质不存在时回退兜底。 */
     private ResourceLocation currentTexture() {
         if (book) {
             List<ResourceLocation> pageTextures = content.pageTextures();
-            if (currentPage < pageTextures.size() && pageTextures.get(currentPage) != null) {
-                return pageTextures.get(currentPage);
+            if (currentPage < pageTextures.size()) {
+                ResourceLocation t = pageTextures.get(currentPage);
+                if (t != null && textureExists(t)) return t;
             }
         }
         return texture;
     }
 
-    /** 按材质非透明区域缩放居中（保留边距）：非透明区域多大就显示多大，透明部分透出深色底。 */
+    /** 背景按整张画布等比缩放居中（无页边距）：画布多大就显示多大，所见即所得，透明部分透出深色底。 */
     private PageLayout computeLayout(ResourceLocation texture) {
         int[] b = textureBounds(texture);
         int texW = Math.max(1, b[0]);
@@ -168,14 +181,18 @@ public class ReadingScreen extends Screen {
         int minY = b[3];
         int maxX = Math.max(minX + 1, b[4]);
         int maxY = Math.max(minY + 1, b[5]);
-        int uw = maxX - minX;
-        int vh = maxY - minY;
         int availW = this.width - SCREEN_MARGIN * 2;
         int availH = this.height - SCREEN_MARGIN * 2;
-        double scale = Math.min((double) availW / uw, (double) availH / vh);
-        int w = Math.max(1, (int) Math.round(uw * scale));
-        int h = Math.max(1, (int) Math.round(vh * scale));
-        return new PageLayout((this.width - w) / 2, (this.height - h) / 2, w, h, minX, minY, uw, vh, texW, texH);
+        double scale = Math.min((double) availW / texW, (double) availH / texH);
+        int w = Math.max(1, (int) Math.round(texW * scale));
+        int h = Math.max(1, (int) Math.round(texH * scale));
+        int x = (this.width - w) / 2;
+        int y = (this.height - h) / 2;
+        int contentX = x + (int) Math.round(minX * scale);
+        int contentY = y + (int) Math.round(minY * scale);
+        int contentW = Math.max(1, (int) Math.round((maxX - minX) * scale));
+        int contentH = Math.max(1, (int) Math.round((maxY - minY) * scale));
+        return new PageLayout(x, y, w, h, 0, 0, texW, texH, texW, texH, contentX, contentY, contentW, contentH);
     }
 
     /** 读取材质像素，计算非透明区域边界（texW, texH, minX, minY, maxX, maxY），带缓存；失败回退整个画布。 */
@@ -219,18 +236,27 @@ public class ReadingScreen extends Screen {
                 layout.u(), layout.v(), layout.uw(), layout.vh(), layout.texW(), layout.texH());
         positionButtons(layout);
 
+        int cx = layout.contentX();
+        int cy = layout.contentY();
+        int cw = layout.contentW();
+        int ch = layout.contentH();
+
         String page = pageTexts.get(Math.min(currentPage, pageTexts.size() - 1));
 
+        // 标题固定在纸张区域顶部中央，类似原版书
         if (!titleText.isEmpty()) {
             guiGraphics.drawString(this.font, titleText,
-                    layout.x() + layout.w() / 2 - this.font.width(titleText) / 2,
-                    layout.y() + (int) (layout.h() * 0.06), 0xFF3F2F1F, false);
+                    cx + cw / 2 - this.font.width(titleText) / 2,
+                    cy + (int) (ch * 0.10), 0xFF3F2F1F, false);
         }
 
-        int textX = layout.x() + (int) (layout.w() * 0.08);
-        int textY = layout.y() + (int) (layout.h() * (titleText.isEmpty() ? 0.12 : 0.18));
-        int areaWidth = Math.max(1, (int) (layout.w() * 0.84));
-        int areaHeight = (int) (layout.h() * 0.72);
+        // 文字区域：基于纸张内容区域，宽度为纸张宽约 32% 的 3 倍（≈0.96），高度为原高度的 2 倍；
+        // 文字左对齐，顶部与标题保持间距，上下留白
+        int areaWidth = Math.max(1, (int) (cw * 0.32 * 3));
+        int areaHeight = Math.max(1, (int) (cw * 0.32 * 4 / 3 * 2));
+        int textX = cx + (cw - areaWidth) / 2;
+        int minTextY = cy + (int) (ch * 0.10) + 12;
+        int textY = Math.max(minTextY, cy + (ch - areaHeight) / 2);
 
         List<Line> lines = layoutText(page, areaWidth);
         int totalHeight = 0;
@@ -243,8 +269,8 @@ public class ReadingScreen extends Screen {
         if (blank && page.isEmpty()) {
             Component hint = Component.translatable("broken_chronicles.gui.blank");
             guiGraphics.drawString(this.font, hint,
-                    layout.x() + layout.w() / 2 - this.font.width(hint) / 2,
-                    layout.y() + layout.h() / 2 - 4, 0x8A8A8A, false);
+                    cx + cw / 2 - this.font.width(hint) / 2,
+                    cy + ch / 2 - 4, 0x8A8A8A, false);
         }
 
         int startY = textY - (int) scroll;
@@ -262,20 +288,20 @@ public class ReadingScreen extends Screen {
         if (book) {
             String pageNumber = (currentPage + 1) + "/" + pageTexts.size();
             guiGraphics.drawString(this.font, pageNumber,
-                    layout.x() + layout.w() / 2 - this.font.width(pageNumber) / 2,
-                    layout.y() + layout.h() - 16, 0xFF3F2F1F, false);
+                    cx + cw / 2 - this.font.width(pageNumber) / 2,
+                    cy + ch - 20, 0xFF3F2F1F, false);
         }
     }
 
     private void positionButtons(PageLayout layout) {
         if (closeButton != null) {
-            closeButton.setPosition(layout.x() + layout.w() - 18, Math.max(4, layout.y() - 8));
+            closeButton.setPosition(layout.contentX() + layout.contentW() - 18, Math.max(4, layout.contentY() - 8));
         }
         if (prevButton != null) {
-            prevButton.setPosition(layout.x() + 6, layout.y() + layout.h() - 22);
+            prevButton.setPosition(layout.contentX() + 6, layout.contentY() + layout.contentH() - 22);
         }
         if (nextButton != null) {
-            nextButton.setPosition(layout.x() + layout.w() - 26, layout.y() + layout.h() - 22);
+            nextButton.setPosition(layout.contentX() + layout.contentW() - 26, layout.contentY() + layout.contentH() - 22);
         }
     }
 
@@ -346,38 +372,108 @@ public class ReadingScreen extends Screen {
         return new ItemStack(item);
     }
 
-    /** 把一段段列表按 maxWidth 折行。 */
+    /** 把一段段列表按 maxWidth 折行；超宽的文本段按字符继续折行，保证不超出屏幕。 */
     private List<Line> wrapLine(List<Segment> segments, int maxWidth) {
         List<Line> out = new ArrayList<>();
         List<Segment> current = new ArrayList<>();
         int used = 0;
         int height = LINE_HEIGHT;
         for (Segment segment : segments) {
-            if (used > 0 && used + segment.width() > maxWidth) {
-                out.add(new Line(current, Math.max(height, LINE_HEIGHT)));
-                current = new ArrayList<>();
-                used = 0;
-                height = LINE_HEIGHT;
+            if (segment.icon()) {
+                if (used > 0 && used + segment.width() > maxWidth) {
+                    out.add(new Line(current, Math.max(height, LINE_HEIGHT)));
+                    current = new ArrayList<>();
+                    used = 0;
+                    height = LINE_HEIGHT;
+                }
+                current.add(segment);
+                used += segment.width();
+                height = Math.max(height, ICON_HEIGHT);
+            } else if (segment.width() > maxWidth) {
+                for (Component part : splitWide(segment.text(), maxWidth)) {
+                    int w = this.font.width(part);
+                    if (used > 0 && used + w > maxWidth) {
+                        out.add(new Line(current, Math.max(height, LINE_HEIGHT)));
+                        current = new ArrayList<>();
+                        used = 0;
+                        height = LINE_HEIGHT;
+                    }
+                    current.add(new Segment(false, part, ItemStack.EMPTY, w));
+                    used += w;
+                }
+            } else {
+                if (used > 0 && used + segment.width() > maxWidth) {
+                    out.add(new Line(current, Math.max(height, LINE_HEIGHT)));
+                    current = new ArrayList<>();
+                    used = 0;
+                    height = LINE_HEIGHT;
+                }
+                current.add(segment);
+                used += segment.width();
             }
-            current.add(segment);
-            used += segment.width();
-            if (segment.icon()) height = Math.max(height, ICON_HEIGHT);
         }
         out.add(new Line(current, Math.max(height, LINE_HEIGHT)));
         return out;
     }
 
-    /** 材质固定绑定条目：条目指定的第一个材质；未指定用配置默认的第一个。 */
+    /** 把超宽文本组件按字符拆成不超过 maxWidth 的多段，保留原样式。 */
+    private List<Component> splitWide(Component component, int maxWidth) {
+        if (this.font.width(component) <= maxWidth) return List.of(component);
+        List<CharStyle> chars = new ArrayList<>();
+        flatten(component, Style.EMPTY, chars);
+        List<Component> out = new ArrayList<>();
+        MutableComponent line = Component.empty();
+        int used = 0;
+        for (CharStyle cs : chars) {
+            int w = this.font.width(String.valueOf(cs.ch()));
+            if (used > 0 && used + w > maxWidth) {
+                out.add(line.copy());
+                line = Component.empty();
+                used = 0;
+            }
+            line.append(Component.literal(String.valueOf(cs.ch())).withStyle(cs.style()));
+            used += w;
+        }
+        if (used > 0) out.add(line.copy());
+        if (out.isEmpty()) out.add(component);
+        return out;
+    }
+
+    /** 单个字符及其继承样式。 */
+    private record CharStyle(char ch, Style style) {
+    }
+
+    /** 把组件树平铺成字符+样式列表（保留 markdown 的粗体/斜体等）。 */
+    private void flatten(Component component, Style inherited, List<CharStyle> out) {
+        Style style = component.getStyle().applyTo(inherited);
+        for (char c : component.getString().toCharArray()) out.add(new CharStyle(c, style));
+        for (Component sibling : component.getSiblings()) flatten(sibling, style, out);
+    }
+
+    /** 材质固定绑定条目：取条目指定的、且实际存在的第一个材质；否则取配置默认里存在的第一个；都没有就用内置 oldpaper。 */
     private ResourceLocation pickTexture(ResolvedContent content) {
-        List<ResourceLocation> textures = content.textures();
-        if (!textures.isEmpty()) {
-            return textures.get(0);
+        for (ResourceLocation t : content.textures()) {
+            if (t != null && textureExists(t)) return t;
         }
-        List<? extends String> defaults = ModConfig.DEFAULT_PAGE_TEXTURES.get();
-        if (!defaults.isEmpty()) {
-            return ResourceLocation.parse(defaults.get(0));
+        for (String def : ModConfig.DEFAULT_PAGE_TEXTURES.get()) {
+            try {
+                ResourceLocation t = ResourceLocation.parse(def);
+                if (textureExists(t)) return t;
+            } catch (Exception ignored) {
+            }
         }
-        return ResourceLocation.fromNamespaceAndPath(ModMindEntry.MOD_ID, "textures/gui/page/scrap.png");
+        return ResourceLocation.fromNamespaceAndPath(ModMindEntry.MOD_ID, "textures/gui/page/oldpaper.png");
+    }
+
+    /** 材质文件是否存在（资源包里找不到时返回 false，避免渲染成紫黑方块）。 */
+    private static boolean textureExists(ResourceLocation location) {
+        if (location == null) return false;
+        return Minecraft.getInstance().getResourceManager().getResource(location).isPresent();
+    }
+
+    /** 玩家实际绑定的阅读键显示名（默认 N，改键后显示新键）。 */
+    private static String readKeyName() {
+        return ModKeyMappings.READ.getKey().getDisplayName().getString();
     }
 
     /** 原版成书页面是 JSON 文本组件，转成纯文本；玩家写的是纯文本，原样返回。 */

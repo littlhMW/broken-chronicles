@@ -1,0 +1,27 @@
+{
+  "display": {
+    "icon": {
+      "id": "minecraft:name_tag"
+    },
+    "title": {
+      "translate": "advancements.broken_chronicles.chronicles.first_tag.title"
+    },
+    "description": {
+      "translate": "advancements.broken_chronicles.chronicles.first_tag.desc"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false,
+    "background": "minecraft:textures/block/stripped_birch_log.png"
+  },
+  "parent": "broken_chronicles:chronicles/first_entry",
+  "criteria": {
+    "collected": {
+      "trigger": "broken_chronicles:collected_entry",
+      "conditions": {
+        "type": "tag"
+      }
+    }
+  }
+}

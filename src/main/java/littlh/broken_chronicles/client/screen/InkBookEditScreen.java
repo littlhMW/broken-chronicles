@@ -1,7 +1,9 @@
 package littlh.broken_chronicles.client.screen;
 
+import littlh.broken_chronicles.ModConfig;
 import littlh.broken_chronicles.network.C2SShardWrite;
 import com.google.common.collect.Lists;
+import com.mojang.blaze3d.platform.NativeImage;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.ChatFormatting;
@@ -21,6 +23,8 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.entity.player.Player;
@@ -33,10 +37,13 @@ import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import javax.annotation.Nullable;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Arrays;
 import java.util.List;
-import java.util.ListIterator;
+import java.util.Map;
 
 /**
  * 破碎墨水书写界面：完整复刻原版书与笔（BookEditScreen）的编辑/签名/翻页交互。
@@ -55,6 +62,8 @@ public class InkBookEditScreen extends Screen {
 
     /** 写作模式：page / book / tag。 */
     private final String mode;
+    /** 最大页数：page（残页）最多 2 页，book/tag 最多 100 页。 */
+    private final int maxPages;
     /** 副手目标物品（纸 / 书与笔 / 要打 tag 的物品）。 */
     private final ItemStack target;
     private final Player owner;
@@ -85,6 +94,12 @@ public class InkBookEditScreen extends Screen {
     private Button cancelButton;
     private Button pageTypeButton;
     private Button bookTypeButton;
+    private Button textureUpButton;
+    private Button textureDownButton;
+    /** 书写时可选的背景材质：textures/gui/page/ 下所有 png（含资源包/外部 assets 追加的）。 */
+    private final List<ResourceLocation> availableTextures = new ArrayList<>();
+    /** 每页选中的背景材质，与 pages 一一对应；null 表示用配置默认材质。 */
+    private final List<ResourceLocation> selectedTextures = new ArrayList<>();
     @Nullable
     private InkBookEditScreen.DisplayCache displayCache = InkBookEditScreen.DisplayCache.EMPTY;
     private Component pageMsg = CommonComponents.EMPTY;
@@ -95,9 +110,11 @@ public class InkBookEditScreen extends Screen {
         this.mode = mode;
         this.outputType = mode;
         this.target = target;
+        this.maxPages = "page".equals(mode) ? 2 : 100;
         this.owner = Minecraft.getInstance().player;
         if (this.pages.isEmpty()) {
             this.pages.add("");
+            this.selectedTextures.add(null);
         }
         this.ownerText = Component.translatable("book.byAuthor", this.owner.getName()).withStyle(ChatFormatting.DARK_GRAY);
     }
@@ -162,6 +179,13 @@ public class InkBookEditScreen extends Screen {
         }
         this.forwardButton = this.addRenderableWidget(new PageButton(i + 116, 159, true, p_98144_ -> this.pageForward(), true));
         this.backButton = this.addRenderableWidget(new PageButton(i + 43, 159, false, p_98113_ -> this.pageBack(), true));
+        this.collectAvailableTextures();
+        int texBtnX = i - 28;
+        int centerY = j + 96;
+        this.textureUpButton = this.addRenderableWidget(Button.builder(Component.literal("\u2191"), b -> this.cycleTexture(-1))
+                .bounds(texBtnX, centerY - 44, 20, 16).build());
+        this.textureDownButton = this.addRenderableWidget(Button.builder(Component.literal("\u2193"), b -> this.cycleTexture(1))
+                .bounds(texBtnX, centerY - 22, 20, 16).build());
         this.updateButtonVisibility();
     }
 
@@ -199,12 +223,48 @@ public class InkBookEditScreen extends Screen {
             this.pageTypeButton.visible = typeSelect;
             this.bookTypeButton.visible = typeSelect;
         }
+        boolean textureSelect = !this.isSigning && !this.availableTextures.isEmpty();
+        if (this.textureUpButton != null) {
+            this.textureUpButton.visible = textureSelect;
+            this.textureDownButton.visible = textureSelect;
+        }
+    }
+
+    /** 收集 textures/gui/page/ 下所有背景材质（含资源包、外部 assets 追加的）。 */
+    private void collectAvailableTextures() {
+        this.availableTextures.clear();
+        try {
+            var found = Minecraft.getInstance().getResourceManager()
+                    .listResources("textures/gui/page", rl -> rl.getPath().endsWith(".png"));
+            List<ResourceLocation> list = new ArrayList<>(found.keySet());
+            list.sort(Comparator.comparing(ResourceLocation::toString));
+            for (ResourceLocation rl : list) {
+                // 过滤已删除的旧图（scrap/diary/leaf），防止历史资源残留出现在待选列表
+                String path = rl.getPath();
+                if (path.endsWith("scrap.png") || path.endsWith("diary.png") || path.endsWith("leaf.png")) continue;
+                this.availableTextures.add(rl);
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    /** 上下按钮：切换当前页的背景材质（在文件夹列表里循环）。 */
+    private void cycleTexture(int delta) {
+        if (this.availableTextures.isEmpty()) return;
+        while (this.selectedTextures.size() <= this.currentPage) this.selectedTextures.add(null);
+        ResourceLocation current = this.selectedTextures.get(this.currentPage);
+        int idx = current == null ? (delta > 0 ? -1 : 0) : this.availableTextures.indexOf(current);
+        int next = (idx + delta + this.availableTextures.size()) % this.availableTextures.size();
+        this.selectedTextures.set(this.currentPage, this.availableTextures.get(next));
+        this.isModified = true;
     }
 
     private void eraseEmptyTrailingPages() {
-        ListIterator<String> listiterator = this.pages.listIterator(this.pages.size());
-        while (listiterator.hasPrevious() && listiterator.previous().isEmpty()) {
-            listiterator.remove();
+        while (!this.pages.isEmpty() && this.pages.get(this.pages.size() - 1).isEmpty()) {
+            this.pages.remove(this.pages.size() - 1);
+            if (this.selectedTextures.size() > this.pages.size()) {
+                this.selectedTextures.remove(this.selectedTextures.size() - 1);
+            }
         }
     }
 
@@ -214,13 +274,24 @@ public class InkBookEditScreen extends Screen {
             this.eraseEmptyTrailingPages();
             String outTitle = signed ? this.title.trim() : "";
             List<String> outPages = new ArrayList<>(this.pages);
-            PacketDistributor.sendToServer(new C2SShardWrite(this.outputType, outTitle, outPages));
+            List<String> outTextures = new ArrayList<>();
+            if ("book".equals(this.outputType)) {
+                for (int i = 0; i < outPages.size(); i++) {
+                    ResourceLocation t = i < this.selectedTextures.size() ? this.selectedTextures.get(i) : null;
+                    outTextures.add(t == null ? "" : t.toString());
+                }
+            } else {
+                ResourceLocation t = this.selectedTextures.isEmpty() ? null : this.selectedTextures.get(0);
+                outTextures.add(t == null ? "" : t.toString());
+            }
+            PacketDistributor.sendToServer(new C2SShardWrite(this.outputType, outTitle, outPages, outTextures));
         }
     }
 
     private void appendPageToBook() {
-        if (this.getNumPages() < 100) {
+        if (this.getNumPages() < this.maxPages) {
             this.pages.add("");
+            this.selectedTextures.add(null);
             this.isModified = true;
         }
     }
@@ -418,6 +489,55 @@ public class InkBookEditScreen extends Screen {
             }
             this.renderHighlight(p_281724_, bookeditscreen$displaycache.selection);
             this.renderCursor(p_281724_, bookeditscreen$displaycache.cursor, bookeditscreen$displaycache.cursorAtEnd);
+            this.renderTextureSelector(p_281724_);
+        }
+    }
+
+    /** 左侧预览：当前页选中的背景材质 + 文件名。 */
+    private void renderTextureSelector(GuiGraphics guiGraphics) {
+        if (this.isSigning || this.availableTextures.isEmpty()) return;
+        ResourceLocation tex = this.currentPage < this.selectedTextures.size() ? this.selectedTextures.get(this.currentPage) : null;
+        if (tex == null) {
+            List<? extends String> defaults = ModConfig.DEFAULT_PAGE_TEXTURES.get();
+            if (defaults.isEmpty()) return;
+            tex = ResourceLocation.parse(defaults.get(0));
+        }
+        int i = (this.width - 192) / 2;
+        int j = 2;
+        int boxX = i - 96;
+        int boxY = j + 26;
+        int boxW = 64;
+        int boxH = 36;
+        int[] size = textureSize(tex);
+        int texW = Math.max(1, size[0]);
+        int texH = Math.max(1, size[1]);
+        double scale = Math.min((double) boxW / texW, (double) boxH / texH);
+        int w = Math.max(1, (int) Math.round(texW * scale));
+        int h = Math.max(1, (int) Math.round(texH * scale));
+        guiGraphics.fill(boxX - 1, boxY - 1, boxX + boxW + 1, boxY + boxH + 1, 0x80000000);
+        guiGraphics.blit(tex, boxX + (boxW - w) / 2, boxY + (boxH - h) / 2, w, h, 0, 0, texW, texH, texW, texH);
+        String path = tex.getPath();
+        String name = path.substring(path.lastIndexOf('/') + 1);
+        guiGraphics.drawString(this.font, name, boxX, boxY + boxH + 4, 0xFFFFFFFF, false);
+    }
+
+    /** 读取材质实际尺寸 {w, h}，带缓存；失败回退 512x288。 */
+    private static final Map<ResourceLocation, int[]> TEXTURE_SIZES = new HashMap<>();
+
+    private static int[] textureSize(ResourceLocation location) {
+        int[] cached = TEXTURE_SIZES.get(location);
+        if (cached != null) return cached;
+        int[] fallback = new int[]{512, 288};
+        try {
+            java.util.Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
+            if (resource.isEmpty()) return fallback;
+            try (InputStream in = resource.get().open(); NativeImage image = NativeImage.read(in)) {
+                int[] size = new int[]{Math.max(1, image.getWidth()), Math.max(1, image.getHeight())};
+                TEXTURE_SIZES.put(location, size);
+                return size;
+            }
+        } catch (Exception ignored) {
+            return fallback;
         }
     }
 

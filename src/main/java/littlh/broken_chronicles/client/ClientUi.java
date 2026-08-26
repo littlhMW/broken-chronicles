@@ -1,6 +1,7 @@
 package littlh.broken_chronicles.client;
 
 import littlh.broken_chronicles.ModConfig;
+import littlh.broken_chronicles.ModItems;
 import littlh.broken_chronicles.content.ResolvedContent;
 import littlh.broken_chronicles.content.ShardContentHelper;
 import littlh.broken_chronicles.content.ShardContentResolver;
@@ -35,9 +36,9 @@ public final class ClientUi {
         if (!ModConfig.WRITING_ENABLED.get()) return;
         ItemStack off = player.getOffhandItem();
         String mode;
-        if (off.is(Items.PAPER)) {
+        if (off.is(Items.PAPER) || off.is(ModItems.FRAGMENT_PAGE.get())) {
             mode = "page";
-        } else if (off.is(Items.WRITABLE_BOOK)) {
+        } else if (off.is(Items.WRITABLE_BOOK) || off.is(ModItems.SHARD_BOOK.get())) {
             mode = "book";
         } else if (!off.isEmpty() && !ShardContentHelper.isSpecial(off)) {
             mode = "tag";

@@ -4,6 +4,7 @@ import littlh.broken_chronicles.ModItems;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
@@ -55,8 +56,19 @@ public final class ShardContentHelper {
         } else {
             data.putString("text", String.join("\n", pages));
         }
+        putTextures(data, textures);
         setShard(stack, data);
         return stack;
+    }
+
+    /** 把书写界面选中的材质写入数据：book 每页一个，page/tag 一个；空串表示用默认材质。 */
+    private static void putTextures(CompoundTag data, List<String> textures) {
+        if (textures == null || textures.isEmpty()) return;
+        ListTag texturesTag = new ListTag();
+        for (String t : textures) {
+            texturesTag.add(net.minecraft.nbt.StringTag.valueOf(t == null ? "" : t));
+        }
+        data.put("textures", texturesTag);
     }
 
     /** 生成条目对应的可阅读物品：page→碎片纸、book→手记书、tag→绑定物品。 */
@@ -73,24 +85,25 @@ public final class ShardContentHelper {
                 return ItemStack.EMPTY;
             }
         }
-        applyEntry(stack, entry.id().toString());
+        applyEntry(stack, entry);
         return stack;
     }
 
     /** 给物品实例打上「引用条目」的文字（tag 自然生成/创造模式条目物品）。 */
-    public static void applyEntry(ItemStack stack, String entryId) {
+    public static void applyEntry(ItemStack stack, ShardEntry entry) {
         CompoundTag data = new CompoundTag();
-        data.putString("type", "tag");
-        data.putString("entry", entryId);
+        data.putString("type", entry.type().id());
+        data.putString("entry", entry.id().toString());
         setShard(stack, data);
     }
 
     /** 给某个物品实例打上 tag 文字（多页内容合并为一段，阅读时滚动展示）。 */
-    public static void applyTag(ItemStack stack, String title, List<String> pages) {
+    public static void applyTag(ItemStack stack, String title, List<String> pages, List<String> textures) {
         CompoundTag data = new CompoundTag();
         data.putString("type", "tag");
         if (title != null && !title.isEmpty()) data.putString("title", title);
         data.putString("text", String.join("\n", pages));
+        putTextures(data, textures);
         setShard(stack, data);
     }
 

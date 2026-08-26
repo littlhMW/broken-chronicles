@@ -22,11 +22,19 @@ public final class ModConfig {
 
     public static final ModConfigSpec.ConfigValue<List<? extends String>> DEFAULT_PAGE_TEXTURES = BUILDER
             .comment("玩家书写的条目，以及未在条目 JSON 里指定材质的条目的默认背景材质。",
-                    "值为完整材质路径，例如 broken_chronicles:textures/gui/page/scrap.png。",
+                    "值为完整材质路径，例如 broken_chronicles:textures/gui/page/oldpaper.png。",
                     "材质画布统一横屏 512x288（16:9），显示时按非透明区域裁剪缩放居中：非透明区域多大就显示多大。",
                     "多选时取列表中的第一个。")
             .defineList("defaultPageTextures",
-                    List.of("broken_chronicles:textures/gui/page/scrap.png", "broken_chronicles:textures/gui/page/diary.png", "broken_chronicles:textures/gui/page/leaf.png"),
+                    List.of(
+                            "broken_chronicles:textures/gui/page/oldpaper.png",
+                            "broken_chronicles:textures/gui/page/oldbook.png",
+                            "broken_chronicles:textures/gui/page/oldpaper_blood1.png",
+                            "broken_chronicles:textures/gui/page/oldpaper_blood2.png",
+                            "broken_chronicles:textures/gui/page/oldpaper_blood3.png",
+                            "broken_chronicles:textures/gui/page/oldbook_blood1.png",
+                            "broken_chronicles:textures/gui/page/oldbook_blood2.png",
+                            "broken_chronicles:textures/gui/page/oldbook_blood3.png"),
                     value -> value instanceof String);
 
     public static final ModConfigSpec SPEC = BUILDER.build();

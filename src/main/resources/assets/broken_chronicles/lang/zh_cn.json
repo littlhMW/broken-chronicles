@@ -19,5 +19,21 @@
   "broken_chronicles.gui.tab.vanilla": "书与纸",
   "broken_chronicles.gui.untitled": "于某物上的一段文字",
   "broken_chronicles.gui.type.page": "纸张",
-  "broken_chronicles.gui.type.book": "书本"
+  "broken_chronicles.gui.type.book": "书本",
+  "advancements.broken_chronicles.chronicles.root.title": "那些散落的传说",
+  "advancements.broken_chronicles.chronicles.root.desc": "合成一本破碎编年史",
+  "advancements.broken_chronicles.chronicles.first_entry.title": "很久很久以前",
+  "advancements.broken_chronicles.chronicles.first_entry.desc": "收录第一个条目",
+  "advancements.broken_chronicles.chronicles.first_page.title": "民谣家",
+  "advancements.broken_chronicles.chronicles.first_page.desc": "收录第一份残页",
+  "advancements.broken_chronicles.chronicles.first_book.title": "追书人",
+  "advancements.broken_chronicles.chronicles.first_book.desc": "收录第一本残册",
+  "advancements.broken_chronicles.chronicles.first_tag.title": "铭刻者",
+  "advancements.broken_chronicles.chronicles.first_tag.desc": "收录第一个铭刻",
+  "advancements.broken_chronicles.chronicles.first_vanilla_book.title": "图书管理员并不识字",
+  "advancements.broken_chronicles.chronicles.first_vanilla_book.desc": "收录第一本原版书",
+  "advancements.broken_chronicles.chronicles.first_named_paper.title": "它写在侧面吗？",
+  "advancements.broken_chronicles.chronicles.first_named_paper.desc": "收录第一张命名的纸",
+  "advancements.broken_chronicles.chronicles.all_types.title": "废墟图书馆",
+  "advancements.broken_chronicles.chronicles.all_types.desc": "收集所有类型的条目"
 }
