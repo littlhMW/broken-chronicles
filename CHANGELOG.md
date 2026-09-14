@@ -9,8 +9,6 @@ the mod version.
 
 ## 0.2.0 — 2026-09-14
 
-首个正式发布。0.1.0 只是仓库的初始提交，没有对外发布过。
-
 ### 新增 · 载体与收录
 
 - 三种文字记录：**残页 `page`**、**残册 `book`**、**铭刻 `tag`**（依附在物品实例上，不影响物品原本用途——苹果照样能吃，剑照样能砍）。
@@ -97,17 +95,9 @@ the mod version.
 
 ---
 
-## 0.1.0 — 2026-08-17
-
-仓库初始提交（内部骨架，未发布）：条目加载、阅读 / 收集界面、战利品注入、配置的雏形。
-
----
-
 ## English
 
 ### 0.2.0 — 2026-09-14
-
-First public release. 0.1.0 was only the repository's initial commit and was never published.
 
 **Record types & collecting**
 
@@ -185,8 +175,3 @@ counter and mod-item recipes are opt-in; untitled entries all read "some words o
 to the game from an entry; random background per opening; editor overflow, overlapping widgets and focus getting stuck
 in the header fields; inscriptions rendering black / unreadable / transparent after mimicking a block; duplicated body
 text; missing item text in English; markdown and line breaks; long titles overflowing.
-
-### 0.1.0 — 2026-08-17
-
-Initial repository commit (internal skeleton, never released): entry loading, reading/collection screens, loot
-injection and the first config.
