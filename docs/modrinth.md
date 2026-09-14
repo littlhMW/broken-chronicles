@@ -7,7 +7,7 @@
 **Broken Chronicles** is a **library for fragmented narrative** for Minecraft **1.21.1** (NeoForge). It does not tell
 you a story — it lets a modpack scatter one across the world: a page torn out of a diary in a dungeon chest, a warning
 carved into a sword, an old book someone signed and then forgot. Read them, and they are recorded into the
-**Fragment Chronicle** forever, even if the item itself is long gone.
+**Broken Chronicle** forever, even if the item itself is long gone.
 
 ## Read anything, from anywhere
 
@@ -32,10 +32,10 @@ All three are read in the same screen: a full background image with a locked tex
 
 ## The items
 
-Everything a player can touch lives in the mod's own creative tab — also titled **Fragment Chronicle**: the
-journal, the two carriers, the ink and the inscription block.
+Everything a player can touch lives in the **Broken Chronicles** creative tab: the journal, the two carriers, the
+ink and the inscription block.
 
-- **Fragment Chronicle** — the journal itself. Crafted from paper + feather + any enchanted book. Two tabs
+- **Broken Chronicle** — the journal itself. Crafted from paper + feather + any enchanted book. Two tabs
   (Chronicles and Written Books & Paper), search by title / narrator / description / mod, an All ⇄ Collected filter,
   volumes, pinned entries, `???` placeholders for undiscovered entries and per-entry clue screens.
 - **Lost Ink** — glow ink sac + ink sac + feather. Hold it with a carrier in the off hand and right-click to write;

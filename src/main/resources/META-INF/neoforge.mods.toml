@@ -13,7 +13,7 @@ description='''收集散落在世界中的碎片化叙事，编录成册。
 支持收录原版成书与命名过的纸，原版成书仍走原版阅读界面。多语言文本、故事链条、运行时门槛、战利品表注入，配置项全部可关。
 
 Gather the fragmented stories scattered across the world and record them into a chronicle.
-Items: Fragment Chronicle (the journal), Broken Fragment (page carrier), Broken Tome (book carrier), Lost Ink. Block: Lost Inscription (can mimic other blocks).
+Items: Broken Chronicle (the journal), Broken Fragment (page carrier), Broken Tome (book carrier), Lost Ink. Block: Lost Inscription (can mimic other blocks).
 Datapack-driven page / book / tag records: right-click them, or press N while hovering the item; reading collects the entry forever, even if the item is gone.
 Vanilla written books and named paper are collected too, and vanilla books keep the vanilla reading screen.
 Multi-language texts, story chains, runtime gates and loot-table injection, every option configurable.'''

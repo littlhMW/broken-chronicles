@@ -7,7 +7,7 @@
 <p><b>Broken Chronicles</b> is a <b>library for fragmented narrative</b> for Minecraft <b>1.21.1</b> (NeoForge). It does
 not tell you a story &mdash; it lets a modpack scatter one across the world: a page torn out of a diary in a dungeon
 chest, a warning carved into a sword, an old book someone signed and then forgot. Read them, and they are recorded into
-the <b>Fragment Chronicle</b> forever, even if the item itself is long gone.</p>
+the <b>Broken Chronicle</b> forever, even if the item itself is long gone.</p>
 
 <h2>Read anything, from anywhere</h2>
 <ul>
@@ -34,10 +34,10 @@ the <b>Fragment Chronicle</b> forever, even if the item itself is long gone.</p>
 (<code>[item:minecraft:apple]</code>) and placeholders like <code>%PLAYER%</code>.</p>
 
 <h2>The items</h2>
-<p>Everything a player can touch lives in the mod's own creative tab &mdash; also titled <b>Fragment Chronicle</b>: the
-journal, the two carriers, the ink and the inscription block.</p>
+<p>Everything a player can touch lives in the <b>Broken Chronicles</b> creative tab: the journal, the two carriers,
+the ink and the inscription block.</p>
 <ul>
-  <li><b>Fragment Chronicle</b> &mdash; the journal itself. Crafted from paper + feather + any enchanted book. Two tabs
+  <li><b>Broken Chronicle</b> &mdash; the journal itself. Crafted from paper + feather + any enchanted book. Two tabs
       (Chronicles and Written Books &amp; Paper), search by title / narrator / description / mod, an All &harr; Collected
       filter, volumes, pinned entries, <code>???</code> placeholders for undiscovered entries and per-entry clue screens.</li>
   <li><b>Lost Ink</b> &mdash; glow ink sac + ink sac + feather. Hold it with a carrier in the off hand and right-click to
