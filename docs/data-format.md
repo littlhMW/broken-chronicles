@@ -522,12 +522,15 @@ ShardEntries.register(new ShardEntry(
   - `readVanillaBooks`（默认 true）：阅读原版成书与命名过的纸
   - `readInscriptions`（默认 true）：空手右键失传铭刻方块读出上面的文字
 - 物品功能开关（关掉后这件物品从创造模式物品栏消失、功能失效、配方移除，残片 / 残册也不再进战利品表）：
-  - `collectionBookEnabled`（默认 true）：破碎编年史本体（右键打开收集册；关掉后它的合成配方也一并移除）
+  - `collectionBookEnabled`（默认 true）：破碎编年史本体，**同时也是「收录」的总开关**。关掉后：收集册打不开、物品栏与配方里没有它，
+    收录也一起停（阅读照常打开阅读界面，但不再往编年史里记、不弹收录提示，`chronicles` 那 8 个收集类成就与相关配方解锁成就也一并消失）。
   - `fragmentPageEnabled`（默认 true）：破碎残片
   - `shardBookEnabled`（默认 true）：破碎残册
-  - `fragmentInkEnabled`（默认 true）：失传墨水
-  - `lostInscriptionEnabled`（默认 true）：失传铭刻
+  - `fragmentInkEnabled`（默认 true）：失传墨水（它的配方解锁成就会一起消失）
+  - `lostInscriptionEnabled`（默认 true）：失传铭刻（它的配方解锁成就会一起消失）
   - `transcribeEnabled`（默认 true）：抄写配方
+- 六件物品全关掉、并且没有注册任何创造栏条目时，本模组在创造模式物品栏里的标签页也会**整个消失**，不会留下一个空白页。
+  （标签页在注册时就决定了，此时数据包条目还没加载；如果靠数据包 `creative: true` 的条目做展示，请至少留一件物品开关开着。）
 - `pageWritingMaxPages`（默认 2，1~8）：书写界面里残页最多能写几页。只影响客户端界面
 - `tagWritingMaxPages`（默认 1，1~8）：给物品打铭刻时最多能写几页。只影响客户端界面
 
@@ -540,6 +543,21 @@ ShardEntries.register(new ShardEntry(
   写法见下面 5.1。
 - **模组设置**：模组本体的开关（阅读开关与物品功能开关都在这一页，悬停有说明）。服务端的项通过 `C2SConfigEdit` 请求服务端修改（需要 OP），
   只有客户端自己生效的项（残页 / 铭刻最大页数）直接写本地配置。
+
+**只想保留「在物品栏里读文字」**（不要手册、残片、残册、墨水、铭刻）：
+
+```toml
+collectionBookEnabled = false   # 收集册 + 收录 + 收集类成就一起停
+fragmentPageEnabled = false
+shardBookEnabled = false
+fragmentInkEnabled = false
+lostInscriptionEnabled = false
+transcribeEnabled = false
+```
+
+还能读的东西：被打上文字的物品（`tag` 条目，靠数据包 / 战利品表刷出来）、原版成书、命名过的纸。
+关掉任何一项都不会给玩家任何提示；在游戏里改这些开关用 `/broken_chronicles settings`（需要 OP，
+失传墨水被关掉时这是唯一入口）。
 
 ### 5.1 配置条件（`broken_chronicles:config`）
 

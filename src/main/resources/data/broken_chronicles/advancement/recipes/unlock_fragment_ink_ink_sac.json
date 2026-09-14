@@ -1,4 +1,7 @@
 {
+  "neoforge:conditions": [
+    { "type": "broken_chronicles:config", "key": "fragmentInkEnabled" }
+  ],
   "criteria": {
     "has_item": {
       "trigger": "minecraft:inventory_changed",

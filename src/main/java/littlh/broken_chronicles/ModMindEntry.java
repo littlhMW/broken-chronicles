@@ -46,7 +46,8 @@ public final class ModMindEntry {
         ModBlocks.BLOCKS.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
         ModItems.ITEMS.register(modEventBus);
-        ModCreativeTabs.TABS.register(modEventBus);
+        // 创造栏标签页自己接注册事件：物品全关掉时不注册（见 ModCreativeTabs）
+        modEventBus.addListener(ModCreativeTabs::onRegister);
         ModLootModifiers.SERIALIZERS.register(modEventBus);
         ModRecipes.SERIALIZERS.register(modEventBus);
         ModLootConditions.SERIALIZERS.register(modEventBus);

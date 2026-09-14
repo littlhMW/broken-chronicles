@@ -1,4 +1,7 @@
 {
+  "neoforge:conditions": [
+    { "type": "broken_chronicles:config", "key": "collectionBookEnabled" }
+  ],
   "display": {
     "icon": {
       "id": "broken_chronicles:collection_book"

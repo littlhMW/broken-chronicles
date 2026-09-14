@@ -111,7 +111,8 @@ public final class ModPackets {
             if (!readAllowed(source, resolved.get())) return;
             littlh.broken_chronicles.api.BrokenChroniclesApi.fireRead(player, resolved.get().id(),
                     resolved.get().type());
-            if (ModConfig.AUTO_COLLECT_ON_READ.get() && !resolved.get().id().startsWith("blank:")) {
+            if (ModConfig.AUTO_COLLECT_ON_READ.get() && littlh.broken_chronicles.ModFeatures.collectEnabled()
+                    && !resolved.get().id().startsWith("blank:")) {
                 CollectionData.unlock(player, resolved.get());
                 LOGGER.info("[破碎编年史] unlocked entry {}", resolved.get().id());
             }

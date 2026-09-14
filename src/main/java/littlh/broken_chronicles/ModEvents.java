@@ -90,7 +90,7 @@ public final class ModEvents {
         if (event.getEntity() instanceof ServerPlayer player) {
             // 默认点亮条目：进游戏自动解锁
             for (ShardEntry entry : ShardEntries.all()) {
-                if (entry.startUnlocked()) {
+                if (entry.startUnlocked() && ModFeatures.collectEnabled()) {
                     CollectionData.unlock(player, ResolvedContent.fromEntry(entry));
                 }
             }
@@ -156,7 +156,8 @@ public final class ModEvents {
         if (resolved.isEmpty()) return;
         littlh.broken_chronicles.api.BrokenChroniclesApi.fireRead(player, resolved.get().id(),
                 resolved.get().type());
-        if (ModConfig.AUTO_COLLECT_ON_READ.get() && !resolved.get().id().startsWith("blank:")) {
+        if (ModConfig.AUTO_COLLECT_ON_READ.get() && ModFeatures.collectEnabled()
+                && !resolved.get().id().startsWith("blank:")) {
             CollectionData.unlock(player, resolved.get());
             ModPackets.sendToPlayer(player, CollectionData.snapshot(player));
         }
@@ -188,7 +189,7 @@ public final class ModEvents {
         if (resolved.isEmpty() || resolved.get().id().startsWith("blank:")) return;
         littlh.broken_chronicles.api.BrokenChroniclesApi.fireRead(player, resolved.get().id(),
                 resolved.get().type());
-        if (ModConfig.AUTO_COLLECT_ON_READ.get()) {
+        if (ModConfig.AUTO_COLLECT_ON_READ.get() && ModFeatures.collectEnabled()) {
             CollectionData.unlock(player, resolved.get());
             ModPackets.sendToPlayer(player, CollectionData.snapshot(player));
         }

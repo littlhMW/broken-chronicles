@@ -86,6 +86,11 @@ the ink and the inscription block.</p>
       datapack conditions as well
       (<code>{ "type": "broken_chronicles:config", "key": "fragmentPageEnabled" }</code>). 24 switches plus the rest,
       all commented.</li>
+  <li><b>Reading only, if that is all you want.</b> Turning the chronicle off turns the collecting side off with it
+      (nothing is recorded, no toast, the collection advancements disappear); turning off the fragment, tome, ink and
+      inscription leaves no recipes, no loot and no empty creative tab behind. What stays is the part that matters:
+      reading text on items, vanilla written books and named paper. <code>/broken_chronicles settings</code> opens the
+      switches in game (needs OP).</li>
   <li><b>Overridable presentation.</b> UI strings are plain translation keys &mdash; including the two tab labels &mdash; and
       backgrounds are ordinary PNGs that any resource pack, or the drop-in <code>config/broken_chronicles/assets/</code>
       folder, can add.</li>

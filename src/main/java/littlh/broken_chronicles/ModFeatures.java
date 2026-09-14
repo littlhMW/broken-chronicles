@@ -69,6 +69,16 @@ public final class ModFeatures {
         return get(ModConfig.COLLECTION_BOOK_ENABLED, true);
     }
 
+    /**
+     * 还会不会"收录"。
+     * <p>
+     * 没有收集册就没有可收录的地方，所以这一项跟着 {@link #collectionBookEnabled()} 走：
+     * 关掉后阅读照常，但不再往编年史里记，也不会再弹收录提示，收集类成就一并消失。
+     */
+    public static boolean collectEnabled() {
+        return collectionBookEnabled();
+    }
+
     /** 「破碎残片」。 */
     public static boolean fragmentPageEnabled() {
         return get(ModConfig.FRAGMENT_PAGE_ENABLED, true);

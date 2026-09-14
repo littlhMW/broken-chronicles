@@ -152,7 +152,10 @@ public final class ModConfig {
 
     public static final ModConfigSpec.BooleanValue COLLECTION_BOOK_ENABLED = BUILDER
             .comment("「破碎编年史」本体：右键打开收集册。默认开启。",
-                    "关掉后右键不再打开收集册，物品栏里也不再显示；它的合成配方（纸 + 羽毛 + 附魔书）一起移除。")
+                    "关掉后右键不再打开收集册，物品栏里也不再显示；它的合成配方（纸 + 羽毛 + 附魔书）一起移除。",
+                    "没有册子就没有可收录的地方，所以这一项连「收录」一起停：阅读照常打开阅读界面，",
+                    "但不再往编年史里记，也不再弹收录提示，收集类成就（那些散落的传说 等 8 个）一并消失。",
+                    "想只保留「在物品栏里读文字」时，把这一项和残片 / 残册 / 墨水 / 铭刻一起关掉即可。")
             .define("collectionBookEnabled", true);
 
     public static final ModConfigSpec.BooleanValue FRAGMENT_PAGE_ENABLED = BUILDER

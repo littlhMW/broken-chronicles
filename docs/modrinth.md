@@ -79,6 +79,10 @@ ink and the inscription block.
   pack can take away anything that does not fit its story. Switching something off is silent: the entry point simply
   stops responding, with no chat or action-bar message. All of them are plain datapack conditions as well
   (`{ "type": "broken_chronicles:config", "key": "fragmentPageEnabled" }`). 24 switches plus the rest, all commented.
+- **Reading only, if that is all you want.** Turning the chronicle off turns the collecting side off with it (nothing is
+  recorded, no toast, the collection advancements disappear); turning off the fragment, tome, ink and inscription leaves
+  no recipes, no loot and no empty creative tab behind. What stays is the part that matters: reading text on items,
+  vanilla written books and named paper. `/broken_chronicles settings` opens the switches in game (needs OP).
 - **Overridable presentation.** UI strings are plain translation keys — including the two tab labels — and backgrounds
   are ordinary PNGs that any resource pack, or the drop-in `config/broken_chronicles/assets/` folder, can add.
 - **Dependency API.** `BrokenChroniclesApi` registers entries from code, exposes collect/read events, custom

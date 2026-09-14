@@ -37,6 +37,7 @@ import java.util.Set;
  * /broken_chronicles preview &lt;id&gt; [页]            预览排版，不收录，左下角显示诊断
  * /broken_chronicles lint                       检查材质、排版溢出、图标引用、缺翻译
  * /broken_chronicles export-lang &lt;语言&gt; [--missing] 导出翻译模板到 config/broken_chronicles/lang/
+ * /broken_chronicles settings                    打开模组设置页（需要 OP）
  * </pre>
  * 服务端那半边（list / validate / loot / unlock / lock / give / read）在 {@code BrokenChroniclesCommand}。
  */
@@ -91,7 +92,21 @@ public final class ClientCommands {
         // 故事链体检 + 关系图导出
         root.then(Commands.literal("graph").executes(ctx -> graph()));
 
+        // 模组设置页：失传墨水被开关关掉后它就没有别的入口了，作者用这条指令直接打开
+        root.then(Commands.literal("settings").executes(ctx -> settings()));
+
         dispatcher.register(root);
+    }
+
+    /**
+     * 打开「模组设置」页（和书写界面右上角那个是同一个界面；服务端的项照样需要 OP 才能改）。
+     * 没权限就什么都不做，也不发提示。
+     */
+    private static int settings() {
+        if (!ClientCollectionState.canEdit()) return 0;
+        Minecraft.getInstance().setScreen(new littlh.broken_chronicles.client.screen.InkSettingsScreen(
+                null, new EntryDraft(), "page", "", List.of()));
+        return 1;
     }
 
     /** 以预览方式打开条目：不收录、左下角显示排版诊断。 */

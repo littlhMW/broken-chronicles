@@ -82,7 +82,14 @@ the mod version.
   残片 / 残册也不再注入战利品表。
 - 全部开关都在书写界面的「设置 → 模组设置」页里（每行悬浮有说明；服务端的项需要 OP），也能被数据包条件引用：
   `{ "type": "broken_chronicles:config", "key": "fragmentPageEnabled" }`。
+- `collectionBookEnabled` 同时是「收录」的总开关：关掉后阅读照常，但不再往编年史里记、不弹收录提示，
+  `chronicles` 那 8 个收集类成就与相关配方解锁成就一并消失。
+- 六件物品全关掉、也没有创造栏条目时，本模组在创造模式物品栏里的标签页整个不注册，不会留下一个空白页。
 - 关掉任何开关都不会给玩家任何提示：入口直接当作没发生，聊天栏与动作栏都不出现文字。
+- 新增客户端指令 `/broken_chronicles settings`：直接打开模组设置页（需要 OP）。失传墨水被关掉后，
+  这是唯一能进设置界面的入口。
+- 「只想保留在物品栏里读文字」的整合包：把六件物品开关全设 false 即可，还能读的是被打上文字的物品、
+  原版成书与命名过的纸。写法见 `docs/data-format.md` 第 5 节。
 
 ### 变更
 
@@ -190,7 +197,11 @@ has its own (`collectionBookEnabled`, `fragmentPageEnabled`, `shardBookEnabled`,
 drops its recipe and stops it being injected into loot tables. All of them sit in the writing screen's
 Settings -> Mod Settings tab (tooltip per row; server rows need OP), can be used as datapack conditions
 (`{ "type": "broken_chronicles:config", "key": "fragmentPageEnabled" }`), and are silent: the entry point simply
-stops responding with no chat or action-bar message.
+stops responding with no chat or action-bar message. `collectionBookEnabled` is also the master switch for collecting:
+with it off, reading still opens but nothing is recorded, no collect toast appears and the eight collection advancements
+are gone. With all six items off (and no creative entries) the mod's creative tab is not registered at all, so no empty
+page is left behind — a pack can ship reading-only. `/broken_chronicles settings` opens the switch screen in game
+(needs OP), which is the only way in once Lost Ink is switched off.
 
 **Changed** — license is now CC BY-NC 4.0; chronicle tabs are "Chronicle / Books & Paper" and every UI string is
 overridable; narrator is a search keyword instead of a filter; revealable entries, the writing editor, the collected

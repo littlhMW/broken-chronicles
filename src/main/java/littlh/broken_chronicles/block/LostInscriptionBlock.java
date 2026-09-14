@@ -214,7 +214,8 @@ public class LostInscriptionBlock extends BaseEntityBlock {
         if (!(player instanceof ServerPlayer serverPlayer)) return InteractionResult.PASS;
         ResolvedContent content = inscription.resolve();
         if (content == null) return InteractionResult.PASS;
-        if (ModConfig.AUTO_COLLECT_ON_READ.get()) {
+        if (ModConfig.AUTO_COLLECT_ON_READ.get()
+                && littlh.broken_chronicles.ModFeatures.collectEnabled()) {
             CollectionData.unlock(serverPlayer, content);
             ModPackets.sendToPlayer(serverPlayer, CollectionData.snapshot(serverPlayer));
         }
