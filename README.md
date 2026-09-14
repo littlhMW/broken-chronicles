@@ -2,7 +2,7 @@
 
 > Gather the fragmented stories scattered across the world, and record them into a chronicle.
 
-**Broken Chronicles** is a Minecraft **NeoForge 1.21.1** mod that adds a collection journal. Find readable fragments — paper scraps, old books, and words carved onto items — read them, and they are recorded into your chronicle forever, even if the item is destroyed.
+**Broken Chronicles** is a Minecraft **NeoForge 1.21.1** mod that adds a collection journal, built as a **library for fragmented narrative**. It does not tell a story — it lets a modpack scatter one across the world: a page torn out of a diary in a dungeon chest, a warning carved into a sword, an old book someone signed and then forgot. Read them and they are recorded in your chronicle forever, even if the item itself is long gone. **Vanilla written books and named paper are collected too**, and anything readable can be read straight from your inventory.
 
 <!-- REPLACE_ME: 项目横幅/截图，例如 ![Banner](https://example.com/banner.png) -->
 
@@ -12,7 +12,8 @@
   - `page` — single-sheet fragments (paper, leaf, scrap...); one fragment can hold a couple of pages
   - `book` — multi-page tomes, each page can have its own texture
   - `tag` — text bound to an item; the item keeps working normally (eat the apple, swing the sword)
-- **Read & collect** — right-click to read, or press **N** while hovering an item in your inventory. Reading automatically unlocks the entry in your chronicle. Opening something from the chronicle or from your inventory returns you to that screen when you close it.
+- **Read & collect** — press **N** while hovering an item in your inventory (chests and other container screens included) or while holding it, or right-click a fragment / tome. Reading automatically unlocks the entry in your chronicle without consuming the item, and closing an entry opened from the chronicle or the inventory returns you to that screen.
+- **Vanilla books and named paper are first class** — a written book still opens the real vanilla book screen and is collected when read; named paper gets a page of its own. Both live in the chronicle's **Books & Paper** tab.
 - **Light-up entries** — revealable entries show as `???` until discovered; optional auto-unlock on login. The `???` list is **off by default** (`showUnknownEntries`) and the built-in fragments are not revealable, so a fresh chronicle shows only what you have actually collected until a pack turns it on.
 - **Writing ink** — craft *Lost Ink* (glow ink sac + ink sac + feather, shapeless) to write your own pages, books or item tags with a full multi-page editor (vanilla book & quill UI; a fragment page holds few pages, a tome holds many). The editor is **off by default** (writingEnabled = false in the config): players only read and collect, and only pack authors turn it on. The server-side switch is synced to clients.
    - `authorExportEnabled` (default false) adds an *Export JSON* button to the editor for turning what you wrote into a datapack entry.
@@ -30,6 +31,7 @@
 - **Auto pagination** — a `book` written with a single long `text` is paginated automatically by real layout height (`autopage`, on by default for text-based books), so authors never have to count characters per page.
 - **Built-in content** — 24 bilingual guide fragments (iron golem, wither, beds...) ship with the mod. They are automatically injected into every vanilla chest loot table that contains paper, book or ink sac (`builtinLootEnabled`, `builtinLootChance`, `enableBuiltinEntries` in the config).
 - **Fully data-driven** — datapack entries, per-page textures, per-language texts (`zh_cn` / `en_us`), markdown formatting, item icons (`[item:minecraft:apple]`), and the placeholders `%READ_KEY%` (the player's read key) / `%PLAYER%` (the player's name).
+- **Pack friendly by default** — nothing is forced on a pack: the writing editor, the built-in fragments, loot injection and the mod's own crafting recipes each have a config switch, UI strings are plain translation keys, and backgrounds are ordinary PNGs.
 - **Integration API** — use Broken Chronicles as a dependency and register entries from code (`BrokenChroniclesApi.register(...)`), listen to `EntryCollectedEvent` / `EntryReadEvent`, register your own `%placeholders%` and custom `conditions` types. See `docs/api-integration.md`.
 
 ## Requirements
