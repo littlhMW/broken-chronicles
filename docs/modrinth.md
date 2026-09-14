@@ -13,7 +13,7 @@ carved into a sword, an old book someone signed and then forgot. Read them, and 
 
 - **Press `N` (`Read Text`) while hovering an item in your inventory.** The reading screen opens without picking the
   item up and without closing the inventory — and it works in chests, barrels and every other container screen too.
-- Right-click a fragment or a tome, or press `N` while holding it.
+- Right-click a fragment, a tome or a named paper, or press `N` while holding it.
 - **Vanilla written books are first class.** A written book still opens the *real* vanilla book screen (the mod calls it
   directly, so nothing about it feels modded) — and reading it collects it. Named paper gets a page of its own. Both are
   filed under the **Books & Paper** tab of the chronicle, next to the mod's own entries.
@@ -125,7 +125,7 @@ The code and the translations of this mod were made together with AI.
 
 - **鼠标悬浮在物品栏里的物品上按 `N`（默认键位「阅读文字」）**：不用拿起物品、不用关掉背包就能打开阅读界面，
   在箱子、木桶等容器界面里同样有效。
-- 右键残页 / 残册即可阅读，手持时按 `N` 也行。
+- 右键残页 / 残册 / 命名过的纸即可阅读，手持时按 `N` 也行。
 - **原版成书是「一等公民」**：写成书依然打开**真正的原版看书界面**（模组直接调用原版界面，不会有割裂感），
   同时把它收录进编年史；命名过的纸单独成页。两者都收在编年史的**「成书与纸」**标签页里。
 - 阅读**不会消耗物品**；物品被丢掉、销毁、连箱子炸掉，条目也不会丢。

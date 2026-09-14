@@ -14,7 +14,7 @@ the <b>Broken Chronicle</b> forever, even if the item itself is long gone.</p>
   <li><b>Press <code>N</code> (<code>Read Text</code>) while hovering an item in your inventory.</b> The reading screen
       opens without picking the item up and without closing the inventory &mdash; and it works in chests, barrels and every
       other container screen too.</li>
-  <li>Right-click a fragment or a tome, or press <code>N</code> while holding it.</li>
+  <li>Right-click a fragment, a tome or a named paper, or press <code>N</code> while holding it.</li>
   <li><b>Vanilla written books are first class.</b> A written book still opens the <i>real</i> vanilla book screen (the
       mod calls it directly, so nothing about it feels modded) &mdash; and reading it collects it. Named paper gets a page of
       its own. Both are filed under the <b>Books &amp; Paper</b> tab of the chronicle, next to the mod's own entries.</li>
@@ -127,7 +127,7 @@ and <code>CHANGELOG.md</code> for every release's changes.</p>
 <ul>
   <li><b>鼠标悬浮在物品栏里的物品上按 <code>N</code>（默认键位「阅读文字」）</b>：不用拿起物品、不用关掉背包就能打开阅读界面，
       在箱子、木桶等容器界面里同样有效。</li>
-  <li>右键残页 / 残册即可阅读，手持时按 <code>N</code> 也行。</li>
+  <li>右键残页 / 残册 / 命名过的纸即可阅读，手持时按 <code>N</code> 也行。</li>
   <li><b>原版成书是「一等公民」</b>：写成书依然打开<b>真正的原版看书界面</b>（模组直接调用原版界面，不会有割裂感），
       同时把它收录进编年史；命名过的纸单独成页。两者都收在编年史的<b>「成书与纸」</b>标签页里。</li>
   <li>阅读<b>不会消耗物品</b>；物品被丢掉、销毁、连箱子炸掉，条目也不会丢。</li>

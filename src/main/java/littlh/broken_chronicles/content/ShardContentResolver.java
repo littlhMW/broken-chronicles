@@ -45,7 +45,7 @@ public final class ShardContentResolver {
         }
 
         if (stack.is(Items.PAPER)) {
-            // 只有命名过的纸可以阅读/收录；普通纸不解析。
+            // 命名过的纸：内容就是它的名字，读了会收录。
             net.minecraft.network.chat.Component paperName = stack.get(DataComponents.CUSTOM_NAME);
             if (paperName != null) {
                 String nameStr = paperName.getString().trim();
@@ -57,6 +57,7 @@ public final class ShardContentResolver {
                             Localized.of(nameStr), List.of(Localized.of(nameStr)), List.of(paperTexture), false));
                 }
             }
+            // 纸本体（没改过名的原版纸）：不能阅读，也不收录。
             return Optional.empty();
         }
 

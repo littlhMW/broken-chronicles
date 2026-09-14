@@ -705,7 +705,8 @@ public final class ExternalEntries {
 
                 收集册与指令
                 -------------------------
-                原版成书：右键打开时会自动收录；命名过的纸：用阅读键（默认 N）读一下再收录。
+                原版成书：右键打开时会自动收录；命名过的纸：右键或阅读键（默认 N）都可以读，读了收录。
+                两者的图标就是原版成书 / 纸物品本身。
                 两者都出现在收集册的"成书与纸"标签页。普通纸（未命名）不能阅读也不收录。
                 /broken_chronicles list [筛选]        列出所有条目
                 /broken_chronicles validate           列出条目加载时的报错
@@ -985,9 +986,10 @@ public final class ExternalEntries {
 
                 Collection book & commands
                 -------------------------
-                Vanilla written books are auto-collected when opened by right-click; named paper is
-                collected after reading it with the read key (default N). Both appear in the "Books & Paper"
-                tab of the collection book. Plain (unnamed) paper cannot be read or collected.
+                Vanilla written books are auto-collected when opened by right-click; named paper can be read
+                with either right-click or the read key (default N) and is collected that way. Both appear in
+                the "Books & Paper" tab of the collection book, using the vanilla book / paper item as icon.
+                Plain (unnamed) paper cannot be read or collected.
                 /broken_chronicles list [filter]        list every entry
                 /broken_chronicles validate             show entry loading problems
                 /broken_chronicles loot                 show loot table injection

@@ -83,6 +83,8 @@ the mod version.
 - 统一物品与界面用词：破碎残片 / 破碎残册 / 破碎编年史 / 失传墨水 / 失传铭刻；书写界面的载体标签、英文界面名一并对齐
   （`Fragment Page` → `Broken Fragment`，`Shard Book` → `Broken Tome`，收集册与创造栏 `Fragment Chronicle` → `Broken Chronicle` / `Broken Chronicles`，标签页英文名定为 `Books & Paper`，超过按钮宽度时自动缩小）。
 - 收录进度显示默认关闭。
+- 命名过的纸也能右键阅读（原先只有阅读键）；「成书与纸」页里原版成书与命名过的纸的图标改用原版成书 / 纸物品本身。
+- 纸本体（原版名字的纸）不能阅读，也不收录。
 
 ### 修复
 
@@ -171,7 +173,9 @@ the mod version.
 
 **Changed** — license is now CC BY-NC 4.0; chronicle tabs are "Chronicle / Books & Paper" and every UI string is
 overridable; narrator is a search keyword instead of a filter; revealable entries, the writing editor, the collected
-counter and mod-item recipes are opt-in; untitled entries all read "some words on something"; item and UI names were unified (Broken Chronicle, Broken Fragment, Broken Tome, Lost Ink, Lost Inscription) and the vanilla tab is "Books & Paper".
+counter and mod-item recipes are opt-in; untitled entries all read "some words on something"; named paper can be
+read by right-click as well as with the read key, and the "Books & Paper" tab uses the vanilla written book / paper
+item as the row icon (plain paper is neither readable nor collected); item and UI names were unified (Broken Chronicle, Broken Fragment, Broken Tome, Lost Ink, Lost Inscription) and the vanilla tab is "Books & Paper".
 
 **Fixed** — `N` while hovering items in container screens; a two-page fragment showing only one page; `Esc` quitting
 to the game from an entry; random background per opening; editor overflow, overlapping widgets and focus getting stuck

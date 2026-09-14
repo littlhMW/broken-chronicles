@@ -489,6 +489,7 @@ public class CollectionScreen extends Screen {
         }
     }
 
+
     private Component titleComponent(ResolvedContent content) {
         String language = Minecraft.getInstance().options.languageCode;
         String title = content.title() != null ? content.title().resolve(language) : "";

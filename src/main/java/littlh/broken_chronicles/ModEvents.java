@@ -161,6 +161,30 @@ public final class ModEvents {
     }
 
     /**
+     * 纸：右键也能读（命名过的纸读了就收录；纸本体只给一张空白页，不收录）。
+     * <p>
+     * 事件两侧都会发：客户端负责开界面，服务端负责收录。
+     */
+    @SubscribeEvent
+    public static void onRightClickPaper(PlayerInteractEvent.RightClickItem event) {
+        ItemStack stack = event.getItemStack();
+        if (!stack.is(Items.PAPER)) return;
+        if (event.getLevel().isClientSide()) {
+            littlh.broken_chronicles.client.ClientUi.openReading(stack);
+            return;
+        }
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        Optional<ResolvedContent> resolved = ShardContentResolver.resolve(stack, player.level().registryAccess());
+        if (resolved.isEmpty() || resolved.get().id().startsWith("blank:")) return;
+        littlh.broken_chronicles.api.BrokenChroniclesApi.fireRead(player, resolved.get().id(),
+                resolved.get().type());
+        if (ModConfig.AUTO_COLLECT_ON_READ.get()) {
+            CollectionData.unlock(player, resolved.get());
+            ModPackets.sendToPlayer(player, CollectionData.snapshot(player));
+        }
+    }
+
+    /**
      * 潜行 + 手拿方块右键失传铭刻：把铭刻外观换成那个方块。
      * <p>
      * 必须在这一层拦：原版对「潜行 + 手上有东西」会整个跳过方块自己的交互（见 ServerPlayerGameMode#useItemOn
