@@ -5,6 +5,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
@@ -39,21 +40,38 @@ public final class ShardContentHelper {
         stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
     }
 
-    /** 生成玩家书写出的碎片纸 / 手记书。 */
+    /** 生成玩家书写出的碎片纸 / 手记书（没有描述）。 */
     public static ItemStack make(String type, String title, List<String> pages, List<String> textures) {
+        return make(type, title, "", pages, textures);
+    }
+
+    /** 生成玩家书写出的碎片纸 / 手记书。 */
+    public static ItemStack make(String type, String title, String description, List<String> pages,
+                                 List<String> textures) {
+        return make(type, title, description, null, pages, textures);
+    }
+
+    /** 生成玩家书写出的碎片纸 / 手记书（带作者）。 */
+    public static ItemStack make(String type, String title, String description, String author,
+                                 List<String> pages, List<String> textures) {
         ItemStack stack = "book".equals(type)
                 ? new ItemStack(ModItems.SHARD_BOOK.get())
                 : new ItemStack(ModItems.FRAGMENT_PAGE.get());
         CompoundTag data = new CompoundTag();
         data.putString("type", type);
         if (title != null && !title.isEmpty()) data.putString("title", title);
-        if ("book".equals(type)) {
-            CompoundTag pagesTag = new CompoundTag();
-            for (int i = 0; i < pages.size(); i++) {
-                pagesTag.putString(String.valueOf(i), pages.get(i));
+        if (description != null && !description.isBlank()) data.putString("description", description.trim());
+        if (author != null && !author.isBlank()) data.putString("author", author.trim());
+        if ("book".equals(type) || "page".equals(type)) {
+            // 用列表存页：复合标签的键是无序的，多页会串页。
+            // 残页也能写好几页（每一页都是独立的一张纸，阅读时翻页看），所以和残册一样按列表存。
+            ListTag pagesTag = new ListTag();
+            for (String page : pages) {
+                pagesTag.add(net.minecraft.nbt.StringTag.valueOf(page == null ? "" : page));
             }
             data.put("pages", pagesTag);
         } else {
+            // 铭刻 / 标签挂在物品上，只显示一页：多页合并成一段，阅读时滚动看
             data.putString("text", String.join("\n", pages));
         }
         putTextures(data, textures);
@@ -97,14 +115,102 @@ public final class ShardContentHelper {
         setShard(stack, data);
     }
 
-    /** 给某个物品实例打上 tag 文字（多页内容合并为一段，阅读时滚动展示）。 */
+    /** 给某个物品实例打上 tag 文字（没有描述）。 */
     public static void applyTag(ItemStack stack, String title, List<String> pages, List<String> textures) {
+        applyTag(stack, title, "", pages, textures);
+    }
+
+    /** 给某个物品实例打上 tag 文字（多页内容合并为一段，阅读时滚动展示）。 */
+    public static void applyTag(ItemStack stack, String title, String description, List<String> pages,
+                                List<String> textures) {
+        applyTag(stack, title, description, null, pages, textures);
+    }
+
+    /** 给某个物品实例打上 tag 文字（带作者）。 */
+    public static void applyTag(ItemStack stack, String title, String description, String author,
+                                List<String> pages, List<String> textures) {
         CompoundTag data = new CompoundTag();
         data.putString("type", "tag");
         if (title != null && !title.isEmpty()) data.putString("title", title);
+        if (description != null && !description.isBlank()) data.putString("description", description.trim());
+        if (author != null && !author.isBlank()) data.putString("author", author.trim());
         data.putString("text", String.join("\n", pages));
         putTextures(data, textures);
         setShard(stack, data);
+    }
+
+    /** 当前界面语言。服务端没有"语言"这个概念，返回空串（解析时退回 en_us、再退回第一个键）。 */
+    public static String displayLanguage() {
+        if (net.neoforged.fml.loading.FMLEnvironment.dist != net.neoforged.api.distmarker.Dist.CLIENT) {
+            return "";
+        }
+        return net.minecraft.client.Minecraft.getInstance().options.languageCode;
+    }
+
+    /** 物品引用的注册表条目（"entry" 标签指向的那条），没有则空。 */
+    public static java.util.Optional<ShardEntry> referencedEntry(ItemStack stack) {
+        CompoundTag shard = getShard(stack);
+        if (shard == null) return java.util.Optional.empty();
+        String entry = shard.getString("entry");
+        return entry.isEmpty() ? java.util.Optional.empty() : ShardEntries.get(entry);
+    }
+
+    /**
+     * 这个物品该显示的标题：先看物品上写的 title，再看它引用的条目的标题。
+     * 残片/残册用它当物品名（就像铁砧命名），读取界面和 tooltip 也用它。没有就空串。
+     */
+    public static String displayTitle(ItemStack stack) {
+        String written = titleOf(stack);
+        if (!written.isEmpty()) return written;
+        return referencedEntry(stack)
+                .map(entry -> entry.title() == null ? "" : entry.title().resolve(displayLanguage()))
+                .orElse("");
+    }
+
+    /** 这个物品该显示的描述：先看物品上写的 description，再看它引用的条目的描述。没有就空串。 */
+    public static String displayDescription(ItemStack stack) {
+        String written = descriptionOf(stack);
+        if (!written.isEmpty()) return written;
+        return referencedEntry(stack)
+                .map(entry -> entry.extras().descriptionText(displayLanguage()))
+                .orElse("");
+    }
+
+    /** 物品上写的标题（没有就返回空串）。 */
+    public static String titleOf(ItemStack stack) {
+        CompoundTag shard = getShard(stack);
+        return shard == null ? "" : shard.getString("title");
+    }
+
+    /** 物品上写的描述（没有就返回空串）。 */
+    public static String descriptionOf(ItemStack stack) {
+        CompoundTag shard = getShard(stack);
+        return shard == null ? "" : shard.getString("description");
+    }
+
+    /** 这个物品该显示的作者：先看物品上写的 author，再看它引用的条目的叙述者。没有就空串。 */
+    public static String displayAuthor(ItemStack stack) {
+        String written = authorOf(stack);
+        if (!written.isEmpty()) return written;
+        return referencedEntry(stack)
+                .map(entry -> entry.narratorFor(displayLanguage()))
+                .orElse("");
+    }
+
+    /** 物品上写的作者（没有就返回空串）。 */
+    public static String authorOf(ItemStack stack) {
+        CompoundTag shard = getShard(stack);
+        return shard == null ? "" : shard.getString("author");
+    }
+
+    /** 物品上有没有一段可以阅读的文字（残页 / 残册 / 被打上文字的物品）。 */
+    public static boolean hasText(ItemStack stack) {
+        CompoundTag shard = getShard(stack);
+        if (shard == null) return false;
+        if (!shard.getString("text").isEmpty()) return true;
+        if (shard.contains("pages", Tag.TAG_COMPOUND) || shard.contains("pages", Tag.TAG_LIST)) return true;
+        String entry = shard.getString("entry");
+        return !entry.isEmpty();
     }
 
     /** 这些物品不能被墨水打 tag（它们有自己的书写/阅读流程）。 */

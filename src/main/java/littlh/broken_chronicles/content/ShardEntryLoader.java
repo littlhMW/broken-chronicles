@@ -33,18 +33,44 @@ public final class ShardEntryLoader implements PreparableReloadListener {
                                           Executor backgroundExecutor, Executor gameExecutor) {
         return CompletableFuture.supplyAsync(() -> loadAll(resourceManager), backgroundExecutor)
                 .thenCompose(barrier::wait)
-                .thenAcceptAsync(data -> { ShardEntries.setData(data); LootLibrary.injectAll(); }, gameExecutor);
+                .thenAcceptAsync(data -> {
+                    ShardEntries.setData(data);
+                    // 翻译覆盖层：config/broken_chronicles/lang/<语言>.json
+                    // 放在 setData 之后，这样数据包条目、自带残片、其他 MOD 注册的条目都能被覆盖
+                    ShardEntries.applyLangOverrides(LangOverrides.loadAll());
+                    LootLibrary.injectAll();
+                }, gameExecutor);
     }
 
     private Map<ResourceLocation, ShardEntry> loadAll(ResourceManager manager) {
+        // 每次重载重新收集诊断信息，/broken_chronicles validate 只看当前状态
+        EntryDiagnostics.clear();
+        // 配置此时一定已加载，按开关补齐/移除自带残片
+        BuiltinEntries.sync();
         Map<ResourceLocation, ShardEntry> entries = new HashMap<>();
         loadType(manager, "page", EntryType.PAGE, entries);
         loadType(manager, "book", EntryType.BOOK, entries);
         loadType(manager, "tag", EntryType.TAG, entries);
         // 外部文本文件夹：config/broken_chronicles/entries/，覆盖数据包条目
-        entries.putAll(ExternalEntries.loadAll());
+        Map<ResourceLocation, ShardEntry> external = ExternalEntries.loadAll();
+        for (ResourceLocation id : external.keySet()) {
+            if (entries.containsKey(id)) {
+                EntryDiagnostics.warn("外部条目", id.toString(),
+                        "与数据包里的同 id 条目重名，这份 config/broken_chronicles/entries/ 里的覆盖了数据包那份");
+            }
+        }
+        entries.putAll(external);
         // 集中的战利品注入配置（数据包 shards_loot + config/broken_chronicles/loot.json）
         LootLibrary.setExtra(LootConfig.load(manager));
+        // 自带残片：自动放进原版会生成纸/书/墨囊的箱子表
+        if (BuiltinEntries.lootEnabled()) {
+            java.util.Set<ResourceLocation> tables = LootLibrary.scanChestTables(manager);
+            LootLibrary.setBuiltinLoot(tables, BuiltinEntries.lootWeights(), BuiltinEntries.lootChance());
+            LOGGER.info("[破碎编年史] 自带残片可出现的箱子战利品表：{} 个", tables.size());
+        } else {
+            LootLibrary.setBuiltinLoot(java.util.Set.of(), java.util.Map.of(), 0.0F);
+        }
+        LOGGER.info("[破碎编年史] 已加载 {} 条数据包 / 外部条目：{}", entries.size(), entries.keySet());
         return entries;
     }
 

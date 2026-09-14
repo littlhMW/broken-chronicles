@@ -32,9 +32,22 @@ public final class ClientModEvents {
     }
 
     @SubscribeEvent
+    public static void onClientSetup(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent event) {
+        // 运行时门槛（gates）在客户端要能判断"这条收没收录"，用本地同步下来的集合
+        littlh.broken_chronicles.content.EntryGate.ClientHooks.COLLECTED =
+                id -> ClientCollectionState.UNLOCKED.contains(id);
+    }
+
+    @SubscribeEvent
     public static void onRegisterKeys(RegisterKeyMappingsEvent event) {
         LOGGER.info("[破碎编年史] RegisterKeyMappingsEvent fired, registering READ key");
         event.register(ModKeyMappings.READ);
+    }
+
+    @SubscribeEvent
+    public static void onRegisterRenderers(net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers event) {
+        event.registerBlockEntityRenderer(littlh.broken_chronicles.ModBlockEntities.LOST_INSCRIPTION.get(),
+                littlh.broken_chronicles.client.block.LostInscriptionRenderer::new);
     }
 
     @SubscribeEvent

@@ -1,0 +1,265 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/littlhMW/broken-chronicles/schemas/entry.json",
+  "title": "Broken Chronicles entry",
+  "description": "破碎编年史条目。文件放 data/<命名空间>/shards/<page|book|tag>/<id>.json，或 config/broken_chronicles/entries/<id>.json。数据包路径里的 page/book/tag 决定类型；外部目录靠 type 字段。",
+  "type": "object",
+  "properties": {
+    "format": {
+      "type": "integer",
+      "default": 1,
+      "description": "条目格式版本，当前为 1。比模组支持的版本高时日志会提示部分字段可能不生效。"
+    },
+    "type": {
+      "enum": ["page", "book", "tag"],
+      "description": "条目类型。数据包条目可省略（由所在文件夹决定）；config/broken_chronicles/entries 里的必须写。"
+    },
+    "order": {
+      "type": "integer",
+      "default": 0,
+      "description": "编年史里的排序，越小越靠前；相同则按 id 字典序。"
+    },
+    "pinned": {
+      "type": "boolean",
+      "default": false,
+      "description": "置顶：收集册里排在所有条目之前（包括其他 order 更小的条目和玩家自己写的内容），不受 order / id 影响。只影响收集册排序，不影响战利品表或生成概率。想让别的条目也排在最上面时写 true。"
+    },
+    "creative": {
+      "type": "boolean",
+      "default": true,
+      "description": "是否出现在创造模式物品栏。"
+    },
+    "reveal": {
+      "type": "boolean",
+      "default": false,
+      "description": "点亮：为 true 时未收录的条目在编年史里显示？？？。"
+    },
+    "startUnlocked": {
+      "type": "boolean",
+      "default": false,
+      "description": "默认已点亮：进游戏自动收录（只在 reveal 为 true 时有意义）。"
+    },
+    "scope": {
+      "enum": ["player", "world"],
+      "default": "player",
+      "description": "player = 每人各自收录；world = 世界条目，任何人解锁后本存档所有玩家一起解锁。"
+    },
+    "group": {
+      "type": "string",
+      "description": "分卷 id，收集册里同 group 的条目归为一卷。"
+    },
+    "group_title": {
+      "$ref": "#/$defs/localized",
+      "description": "分卷显示名，可多语言；不写则显示 group id。"
+    },
+    "hint": {
+      "$ref": "#/$defs/localized",
+      "description": "未收录时显示在？？？后面的提示，可多语言。clue.where 存在时优先显示 clue.where。"
+    },
+    "narrator": {
+      "$ref": "#/$defs/localized",
+      "description": "叙述者：这段文字是谁写的。可多语言、可省略。收集册里显示在标题后面（搜索框里能搜到），阅读界面里显示在标题下方。绑定了原版成书的 book 条目不写时，自动用成书自带的作者名。author 是同义字段。"
+    },
+    "author": {
+      "$ref": "#/$defs/localized",
+      "description": "narrator 的别名，写哪个都行，narrator 优先。"
+    },
+    "description": {
+      "$ref": "#/$defs/localized",
+      "description": "描述：收集册里鼠标悬浮这条条目时，像 tooltip 一样显示在标题下面（灰色）。不写就不显示。用失传墨水写的残片/残册也可以单独填一行描述，那会跟着物品走。"
+    },
+    "clue": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "where": {
+          "$ref": "#/$defs/localized",
+          "description": "一行字，未收录时显示在？？？后面，告诉玩家去哪儿找。"
+        },
+        "track": {
+          "type": "boolean",
+          "default": false,
+          "description": "为 true 时这条？？？可以点开「线索」界面：列出获取途径（战利品表 / 物品 / 原版成书 / 书写 / 创造）、还没收录的前置、以及门槛是否满足。每条条目各自决定要不要写 clue。"
+        }
+      },
+      "description": "线索：未收录条目的方向感。整块可选，不写就是只显示？？？（或用 hint）。"
+    },
+    "gates": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/gate" },
+      "description": "运行时门槛：不满足就不刷出来（战利品表 / 生物掉落 / 钓鱼 / 交易 / 合成都不给）。与 requires 的分工：requires 管「存不存在」（不满足连？？？都没有），gates 管「刷不刷得出来」（条目照常显示成？？？）。调试时用配置 enforceGates 一键关掉。"
+    },
+    "entity": {
+      "type": "string",
+      "description": "仅 tag：只在这只生物死亡掉落时判定，填生物 id，例如 minecraft:zombie。"
+    },
+    "fishing": {
+      "type": "boolean",
+      "default": false,
+      "description": "仅 tag：只在钓上来时判定。"
+    },
+    "traded": {
+      "type": "boolean",
+      "default": false,
+      "description": "仅 tag：只在村民交易获得时判定。"
+    },
+    "crafted": {
+      "type": "boolean",
+      "default": false,
+      "description": "仅 tag：只在合成产出时判定。"
+    },
+    "texture": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "items": { "type": "string" } }
+      ],
+      "description": "背景材质完整路径（要带 textures/ 前缀、以 .png 结尾），例如 broken_chronicles:textures/gui/page/oldpaper.png。数组表示多张候选，按顺序取第一个能加载到的；画布统一 512×288，按非透明区域裁剪缩放居中，规格见 docs/textures.md。"
+    },
+    "title": {
+      "$ref": "#/$defs/localized",
+      "description": "标题，可多语言，可省略。"
+    },
+    "text": {
+      "$ref": "#/$defs/localized",
+      "description": "正文。page / tag 用它；book 也可以用（这时默认开启自动分页）。支持轻量 markdown（# 标题、**粗体**、*斜体*、`代码`、- 列表、> 引用、--- 分隔线）与 [item:minecraft:apple] 图标；真实换行有效，超宽自动折行。"
+    },
+    "pages": {
+      "oneOf": [
+        { "$ref": "#/$defs/localized" },
+        {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "$ref": "#/$defs/localized" },
+              {
+                "type": "object",
+                "properties": {
+                  "text": { "$ref": "#/$defs/localized" },
+                  "texture": { "type": "string" }
+                },
+                "required": ["text"],
+                "additionalProperties": false,
+                "description": "带单独背景的一页。"
+              }
+            ]
+          }
+        }
+      ],
+      "description": "多页正文。book 用它最常规；page 也支持（做一张纸上写了好几页的残片）。不带 texture 的页回退条目自己的 texture。"
+    },
+    "autopage": {
+      "type": "boolean",
+      "description": "按排版高度自动分页。不写时的默认值：用 text（而不是 pages）写正文的 book 为 true，其余为 false（内容比一页高就滚动）。"
+    },
+    "item": {
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "properties": {
+            "id": { "type": "string" },
+            "title": { "type": "string" },
+            "author": { "type": "string" }
+          },
+          "additionalProperties": false,
+          "description": "book 专用：绑定一本特定原版成书，只写的字段参与匹配。"
+        }
+      ],
+      "description": "tag 填物品 id（文字绑在该物品上）；book 可填对象绑定原版成书。"
+    },
+    "chance": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "default": 0,
+      "description": "仅 tag：自然生成的该物品带这段文字的概率，100 为必定带。写了 entity / fishing / traded / crafted 时，只在那些来源掷这个概率。"
+    },
+    "loot_tables": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "书库：把条目放进这些战利品表，例如 minecraft:chests/simple_dungeon。"
+    },
+    "loot_weight": {
+      "type": "integer",
+      "minimum": 1,
+      "default": 1,
+      "description": "同一次抽取里的权重，越大越容易抽到。"
+    },
+    "conditions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/condition" },
+      "description": "加载条件，全部满足才会注册这条条目。"
+    },
+    "on_unlock": {
+      "type": "object",
+      "properties": {
+        "function": { "type": "string", "description": "第一次收录时执行的数据包函数。" },
+        "loot_table": { "type": "string", "description": "第一次收录时按战利品表给物品。" },
+        "command": { "type": "string", "description": "第一次收录时以玩家身份执行的指令（不要写开头的 /）。" }
+      },
+      "additionalProperties": false
+    },
+    "requires": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "故事链条：先收录这些条目，本条目才会出现（战利品表 / 物品自然生成 / 收集册里连 ??? 都不显示）。可以写成单个字符串。"
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "const": "book" } }, "required": ["type"] },
+      "then": { "required": ["pages"] }
+    },
+    {
+      "if": { "properties": { "type": { "enum": ["page", "tag"] } }, "required": ["type"] },
+      "then": { "required": ["text"] }
+    }
+  ],
+  "$defs": {
+    "localized": {
+      "oneOf": [
+        { "type": "string" },
+        {
+          "type": "object",
+          "additionalProperties": { "type": "string" },
+          "propertyNames": { "pattern": "^[a-z]{2}(_[a-z]{2})?$" },
+          "description": "按语言区分的文本，例如 { \"zh_cn\": \"...\", \"en_us\": \"...\" }；缺省回退 en_us，再回退第一项。"
+        }
+      ]
+    },
+    "gate": {
+      "type": "object",
+      "required": ["type"],
+      "description": "一条运行时门槛。target 用 id 字段填。",
+      "properties": {
+        "type": {
+          "enum": ["entry", "advancement", "dimension", "item", "scoreboard", "any", "or", "all", "and", "not"]
+        },
+        "id": { "type": "string", "description": "entry = 条目 id；advancement = 进度 id；dimension = 维度 id；item = 物品 id。" },
+        "count": { "type": "integer", "minimum": 1, "default": 1, "description": "item 门槛需要的数量。" },
+        "objective": { "type": "string", "description": "scoreboard 门槛的计分板名称。" },
+        "min": { "type": "integer", "description": "scoreboard 下限（含）。" },
+        "max": { "type": "integer", "description": "scoreboard 上限（含）。" },
+        "value": { "$ref": "#/$defs/gate", "description": "not 的内层门槛。" },
+        "values": { "type": "array", "items": { "$ref": "#/$defs/gate" }, "description": "any / all 的内层门槛。" }
+      }
+    },
+    "condition": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "enum": [
+            "mod_loaded", "mod_not_loaded",
+            "item_exists", "item_missing",
+            "all", "and", "any", "or", "not"
+          ]
+        },
+        "mod": { "type": "string" },
+        "item": { "type": "string" },
+        "value": { "$ref": "#/$defs/condition" },
+        "values": { "type": "array", "items": { "$ref": "#/$defs/condition" } }
+      }
+    }
+  }
+}

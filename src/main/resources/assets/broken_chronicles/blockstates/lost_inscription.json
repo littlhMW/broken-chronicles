@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "mimic=false": { "model": "broken_chronicles:block/inscription" },
+    "mimic=true": { "model": "broken_chronicles:block/inscription_empty" }
+  }
+}

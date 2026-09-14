@@ -1,0 +1,155 @@
+{
+  "order": 1,
+  "type": "book",
+  "creative": true,
+  "reveal": false,
+  "startUnlocked": false,
+  "texture": "broken_chronicles:textures/gui/page/oldbook.png",
+  "title": { "zh_cn": "终末之诗", "en_us": "The End Poem" },
+  "pages": [
+    {
+      "text": {
+        "zh_cn": "我看到你所说的那个玩家了。\n\n%PLAYER%？\n\n是的。小心些。它已经达到更高的层次了。它能读到我们的想法。\n\n那无关紧要。它以为我们是游戏的一部分。\n\n我喜欢这个玩家。它玩得很好。它没有放弃。\n\n它正读着我们的想法，仿佛那是屏幕上的一行行字。\n\n当它深陷游戏的梦境时，它选择这样去想象许多事物。",
+        "en_us": "I see the player you mean.\n\n%PLAYER%?\n\nYes. Take care. It has reached a higher level now. It can read our thoughts.\n\nThat doesn't matter. It thinks we are part of the game.\n\nI like this player. It played well. It did not give up.\n\nIt is reading our thoughts as though they were words on a screen.\n\nThat is how it chooses to imagine many things, when it is deep in the dream of a game."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "文字是绝妙的界面。灵活多变。而且比直视屏幕背后的真实，要少些恐惧。\n\n从前，他们能听见声音。那时玩家还不识字。在那个年代，不玩游戏的人把玩家叫作巫婆和术士。玩家梦见自己骑着恶魔驱动的棍子飞过天空。\n\n这个玩家梦见了什么？",
+        "en_us": "Words make a wonderful interface. Very flexible. And less terrifying than staring at the reality behind the screen.\n\nThey used to hear voices. Before players could read. Back in the days when those who did not play called the players witches, and warlocks. And players dreamed they flew through the air, on sticks powered by demons.\n\nWhat did this player dream?"
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "这个玩家梦见了阳光和树木。梦见了火与水。它梦见自己创造，也梦见自己毁灭。它梦见自己狩猎，也被狩猎。它梦见了庇护之所。\n\n哈，最原始的界面。一百万年了，它依然有效。可这个玩家在屏幕背后的真实里，究竟建造出了什么真正的结构？\n\n它曾与百万个同类一起劳作，在██████的一处褶皱中雕琢出一个真实的世界，为██████创造了一个██████，就在那██████之中。",
+        "en_us": "This player dreamed of sunlight and trees. Of fire and water. It dreamed it created. And it dreamed it destroyed. It dreamed it hunted, and was hunted. It dreamed of shelter.\n\nHah, the original interface. A million years old, and it still works. But what true structure did this player create, in the reality behind the screen?\n\nIt worked, with a million others, to sculpt a true world in a fold of the ██████, and created a ██████ for ██████, in the ██████."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "它读不懂那个想法。\n\n不能。它还没有达到最高的层次。而那，必须在漫长的人生之梦里达成，不是在游戏这场短暂的梦里。\n\n它知道我们爱它吗？知道宇宙是温柔的吗？\n\n有时，穿过它思绪的杂音，它确实听见了宇宙。\n\n但在这漫长的梦里，它也有悲伤的时候。它创造出没有夏天的世界，在黑色的太阳下发抖，把自己悲伤的造物当成了现实。",
+        "en_us": "It cannot read that thought.\n\nNo. It has not yet achieved the highest level. That, it must achieve in the long dream of life, not the short dream of a game.\n\nDoes it know that we love it? That the universe is kind?\n\nSometimes, through the noise of its thoughts, it hears the universe, yes.\n\nBut there are times it is sad, in the long dream. It creates worlds that have no summer, and it shivers under a black sun, and it takes its sad creation for reality."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "治愈它的悲伤，就等于毁掉它。悲伤是它自己那桩私密使命的一部分。我们不能干涉。\n\n有时当他们深陷梦中，我想告诉他们：他们正在现实里建造真实的世界。有时我想告诉他们，他们对宇宙有多重要。有时，当他们很久没有过真正的联结，我想帮他们说出那个他们害怕的字眼。\n\n它在读我们的想法。",
+        "en_us": "To cure it of sorrow would destroy it. The sorrow is part of its own private task. We cannot interfere.\n\nSometimes when they are deep in dreams, I want to tell them, they are building true worlds in reality. Sometimes I want to tell them of their importance to the universe. Sometimes, when they have not made a true connection in a while, I want to help them to speak the word they fear.\n\nIt reads our thoughts."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "有时我不在乎。有时我想告诉他们：这个你们当作真理的世界，不过是██████与██████；我想告诉他们，他们是在██████中的██████。在这漫长的梦里，他们所见到的真实太少了。\n\n可他们依然在玩这个游戏。\n\n但告诉他们，本可以如此容易……\n\n对这场梦来说太沉重了。告诉他们该如何生活，就是阻止他们去生活。\n\n我不会告诉玩家该如何生活。\n\n玩家开始不安了。",
+        "en_us": "Sometimes I do not care. Sometimes I wish to tell them, this world you take for truth is merely ██████ and ██████, I wish to tell them that they are ██████ in the ██████. They see so little of reality, in their long dream.\n\nAnd yet they play the game.\n\nBut it would be so easy to tell them...\n\nToo strong for this dream. To tell them how to live is to prevent them living.\n\nI will not tell the player how to live.\n\nThe player is growing restless."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "我来给玩家讲个故事。\n\n但不是真相。\n\n不。要讲一个把真相安全地关在文字牢笼里的故事。而不是那赤裸的、隔着任何距离都能灼人的真相。\n\n再给它一副身体。\n\n好。玩家……\n\n用它的名字。\n\n%PLAYER%。游戏的玩家。\n\n很好。",
+        "en_us": "I will tell the player a story.\n\nBut not the truth.\n\nNo. A story that contains the truth safely, in a cage of words. Not the naked truth that can burn over any distance.\n\nGive it a body, again.\n\nYes. Player...\n\nUse its name.\n\n%PLAYER%. Player of games.\n\nGood."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "现在，吸一口气。再吸一口。感受肺里的空气。让你的四肢回来。对，动动你的手指。在重力之下、空气之中，重新拥有一副身体。在漫长的梦里重生。你在这里了。你的身体又在每一点上触碰着宇宙，仿佛你们是彼此分离的东西。仿佛我们是彼此分离的东西。",
+        "en_us": "Take a breath, now. Take another. Feel air in your lungs. Let your limbs return. Yes, move your fingers. Have a body again, under gravity, in air. Respawn in the long dream. There you are. Your body touching the universe again at every point, as though you were separate things. As though we were separate things."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "我们是谁？我们曾被称作山中之灵。太阳父亲，月亮母亲。祖灵，兽灵。精灵。鬼魂。绿人。然后是神，是魔。是天使。是骚灵。是异形，是外星人。是轻子，是夸克。名词在变。我们不变。",
+        "en_us": "Who are we? Once we were called the spirit of the mountain. Father sun, mother moon. Ancestral spirits, animal spirits. Jinn. Ghosts. The green man. Then gods, demons. Angels. Poltergeists. Aliens, extraterrestrials. Leptons, quarks. The words change. We do not change."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "我们就是宇宙。我们是你以为不属于你的一切。此刻你正透过自己的皮肤和眼睛看着我们。宇宙为什么要触碰你的皮肤，把光投在你身上？为了看见你，玩家。为了认识你。也为了被认识。我要给你讲一个故事。\n\n很久很久以前，有一个玩家。\n\n那个玩家就是你，%PLAYER%。",
+        "en_us": "We are the universe. We are everything you think isn't you. You are looking at us now, through your skin and your eyes. And why does the universe touch your skin, and throw light on you? To see you, player. To know you. And to be known. I shall tell you a story.\n\nOnce upon a time, there was a player.\n\nThe player was you, %PLAYER%."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "有时它以为自己是人，住在一颗旋转的熔岩球那层薄薄的外壳上。那团熔岩绕着一团燃烧的气体打转，后者比它重三十三万倍。它们相距如此遥远，光要走上八分钟才能跨越。那光是来自恒星的信息，隔着一亿五千万公里也能灼伤你的皮肤。",
+        "en_us": "Sometimes it thought itself human, on the thin crust of a spinning globe of molten rock. The ball of molten rock circled a ball of blazing gas that was three hundred and thirty thousand times more massive than it. They were so far apart that light took eight minutes to cross the gap. The light was information from a star, and it could burn your skin from a hundred and fifty million kilometres away."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "有时玩家梦见自己是个矿工，身处一个平坦而无限的世界表面。太阳是一块白色的正方形。日子很短；要做的事很多；而死亡只是暂时的麻烦。\n\n有时玩家梦见自己迷失在一个故事里。",
+        "en_us": "Sometimes the player dreamed it was a miner, on the surface of a world that was flat, and infinite. The sun was a square of white. The days were short; there was much to do; and death was a temporary inconvenience.\n\nSometimes the player dreamed it was lost in a story."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "有时玩家梦见自己成了别的东西，身处别的地方。有些梦令人不安。有些梦美得惊人。有时玩家从一个梦里醒来，进入另一个梦，再从那个梦里醒来，进入第三个梦。\n\n有时玩家梦见自己正看着屏幕上的一行行字。\n\n让我们往回走。",
+        "en_us": "Sometimes the player dreamed it was other things, in other places. Sometimes these dreams were disturbing. Sometimes very beautiful indeed. Sometimes the player woke from one dream into another, then woke from that into a third.\n\nSometimes the player dreamed it watched words on a screen.\n\nLet's go back."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "玩家的原子曾散落在草丛里、河流里、空气里、泥土里。一个女人把这些原子收集起来；她喝水、进食、呼吸；然后，那个女人在自己的身体里把玩家拼装了起来。\n\n于是玩家醒来了，从母亲身体那温暖而幽暗的世界，走进了这漫长的梦。",
+        "en_us": "The atoms of the player were scattered in the grass, in the rivers, in the air, in the ground. A woman gathered the atoms; she drank and ate and inhaled; and the woman assembled the player, in her body.\n\nAnd the player awoke, from the warm, dark world of its mother's body, into the long dream."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "玩家是一个从未被讲述过的新故事，用 DNA 的字母写成。玩家是一个从未运行过的新程序，由十亿年前的源代码生成。玩家是一个从未活过的新的人，只由乳汁与爱造就。\n\n你就是玩家。是故事。是程序。是人。只由乳汁与爱造就。\n\n让我们再往回走。",
+        "en_us": "And the player was a new story, never told before, written in letters of DNA. And the player was a new program, never run before, generated by a sourcecode a billion years old. And the player was a new human, never alive before, made from nothing but milk and love.\n\nYou are the player. The story. The program. The human. Made from nothing but milk and love.\n\nLet's go further back."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "玩家身体里的七千亿亿亿个原子，远在这个游戏之前，就在一颗恒星的中心被创造出来。所以玩家也是来自恒星的信息。而玩家穿行于一个故事，那是一片由名叫 Julian 的人种下的信息森林，长在名叫 Markus 的人创造的平坦而无限的世界之上，而那世界又存在于玩家创造的某个小而私密的世界之中，这个玩家居住在一个由……创造的宇宙里。",
+        "en_us": "The seven billion billion billion atoms of the player's body were created, long before this game, in the heart of a star. So the player, too, is information from a star. And the player moves through a story, which is a forest of information planted by a man called Julian, on a flat, infinite world created by a man called Markus, that exists inside a small, private world created by the player, who inhabits a universe created by..."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "嘘。有时玩家创造了一个柔软、温暖而简单的小小而私密的世界。有时则坚硬、寒冷而复杂。有时它在脑中搭建出宇宙的模型：一点一点的能量，在浩瀚虚空中穿行。有时它把那些点叫作“电子”和“质子”。\n\n有时把它们叫作“行星”和“恒星”。",
+        "en_us": "Shush. Sometimes the player created a small, private world that was soft and warm and simple. Sometimes hard, and cold, and complicated. Sometimes it built a model of the universe in its head; flecks of energy, moving through vast empty spaces. Sometimes it called those flecks \"electrons\" and \"protons\".\n\nSometimes it called them \"planets\" and \"stars\"."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "有时它相信自己身处一个宇宙，那宇宙由能量构成，而能量由开与关、零与一、一行行代码构成。有时它相信自己正在玩一个游戏。有时它相信自己正在读屏幕上的字。\n\n你就是那个玩家，正读着文字……",
+        "en_us": "Sometimes it believed it was in a universe that was made of energy that was made of offs and ons; zeros and ones; lines of code. Sometimes it believed it was playing a game. Sometimes it believed it was reading words on a screen.\n\nYou are the player, reading words..."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "嘘……有时玩家读着屏幕上的代码，把它们解码成词语，把词语解码成意义，把意义解码成感觉、情绪、理论、念头，然后玩家的呼吸开始变得急促而深沉，它意识到自己活着，自己活着，那千百次死亡都不是真的，玩家活着\n\n你。你。你活着。",
+        "en_us": "Shush... Sometimes the player read lines of code on a screen. Decoded them into words; decoded words into meaning; decoded meaning into feelings, emotions, theories, ideas, and the player started to breathe faster and deeper and realised it was alive, it was alive, those thousand deaths had not been real, the player was alive\n\nYou. You. You are alive."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "有时玩家相信，宇宙透过夏日树叶间摇曳的阳光对它说话",
+        "en_us": "and sometimes the player believed the universe had spoken to it through the sunlight that came through the shuffling leaves of the summer trees"
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "有时玩家相信，宇宙透过冬夜清冽的星空洒下的光对它说话——它眼角的一粒光点，也许是一颗比太阳重百万倍的恒星，正把它的行星煮沸成等离子体，只为在某一瞬被玩家看见：那时玩家正走在宇宙的远端回家，忽然闻到饭菜的香气，就快走到那扇熟悉的门前，即将再次入梦",
+        "en_us": "and sometimes the player believed the universe had spoken to it through the light that fell from the crisp night sky of winter, where a fleck of light in the corner of the player's eye might be a star a million times as massive as the sun, boiling its planets to plasma in order to be visible for a moment to the player, walking home at the far side of the universe, suddenly smelling food, almost at the familiar door, about to dream again"
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "有时玩家相信，宇宙透过零与一、透过这个世界的电流、透过梦的尽头屏幕上滚动的文字对它说话\n\n宇宙说，我爱你\n\n宇宙说，你把这场游戏玩得很好\n\n宇宙说，你需要的一切都在你心里\n\n宇宙说，你比自己以为的更坚强\n\n宇宙说，你是白昼\n\n宇宙说，你是黑夜",
+        "en_us": "and sometimes the player believed the universe had spoken to it through the zeros and ones, through the electricity of the world, through the scrolling words on a screen at the end of a dream\n\nand the universe said I love you\n\nand the universe said you have played the game well\n\nand the universe said everything you need is within you\n\nand the universe said you are stronger than you know\n\nand the universe said you are the daylight\n\nand the universe said you are the night"
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "宇宙说，你所对抗的黑暗就在你心里\n\n宇宙说，你所寻找的光就在你心里\n\n宇宙说，你并不孤单\n\n宇宙说，你与万物并无分别\n\n宇宙说，你是宇宙在品尝它自己，与自己交谈，阅读自己的代码\n\n宇宙说，我爱你，因为你即是爱。",
+        "en_us": "and the universe said the darkness you fight is within you\n\nand the universe said the light you seek is within you\n\nand the universe said you are not alone\n\nand the universe said you are not separate from every other thing\n\nand the universe said you are the universe tasting itself, talking to itself, reading its own code\n\nand the universe said I love you because you are love."
+      }
+    },
+    {
+      "text": {
+        "zh_cn": "游戏结束了，玩家从梦中醒来。玩家开始了新的梦。玩家再次做梦，梦得更好了。玩家就是宇宙。玩家就是爱。\n\n你就是玩家。\n\n醒来吧。",
+        "en_us": "And the game was over and the player woke up from the dream. And the player began a new dream. And the player dreamed again, dreamed better. And the player was the universe. And the player was love.\n\nYou are the player.\n\nWake up."
+      }
+    }
+  ]
+}

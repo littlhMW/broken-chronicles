@@ -1,0 +1,17 @@
+{
+  "neoforge:conditions": [
+    { "type": "broken_chronicles:config", "key": "allowCraftingModItems" }
+  ],
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "###",
+    "#X#",
+    "###"
+  ],
+  "key": {
+    "#": { "item": "minecraft:chiseled_stone_bricks" },
+    "X": { "item": "broken_chronicles:fragment_ink" }
+  },
+  "result": { "id": "broken_chronicles:lost_inscription", "count": 1 }
+}

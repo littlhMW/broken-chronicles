@@ -3,13 +3,16 @@ package littlh.broken_chronicles.client;
 import littlh.broken_chronicles.ModMindEntry;
 import littlh.broken_chronicles.network.C2SShardRead;
 import littlh.broken_chronicles.client.screen.ReadingScreen;
+import littlh.broken_chronicles.client.screen.VanillaBookScreen;
 import littlh.broken_chronicles.content.ResolvedContent;
 import littlh.broken_chronicles.content.ShardContentHelper;
 import littlh.broken_chronicles.content.ShardContentResolver;
 import littlh.broken_chronicles.content.ShardEntries;
+import littlh.broken_chronicles.content.ShardEntry;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.nbt.CompoundTag;
@@ -70,31 +73,42 @@ public final class ClientHandler {
         }
     }
 
-    /** 被写了字的物品：tooltip 第二行显示文字标题（金色斜体），不改物品名。 */
+    /**
+     * 被写了字的物品：tooltip 补上标题与描述。
+     * <p>
+     * 残片 / 残册的物品名本身就是标题（见 {@code FragmentPageItem#getName}），所以这两种不再重复一行；
+     * 被打上文字的物品（苹果、剑……）名字没变，标题在这里补一行金色斜体。
+     */
     @SubscribeEvent
     public static void onGatherTooltip(RenderTooltipEvent.GatherComponents event) {
         ItemStack stack = event.getItemStack();
-        CompoundTag shard = ShardContentHelper.getShard(stack);
-        LOGGER.debug("[破碎编年史] tooltip stack={} hasShard={} shard={}", stack, shard != null, shard);
-        if (shard == null) return;
-        String title = shard.getString("title");
-        if (title.isEmpty()) {
-            String entry = shard.getString("entry");
-            if (!entry.isEmpty()) {
-                var referenced = ShardEntries.get(entry);
-                if (referenced.isPresent() && referenced.get().title() != null) {
-                    title = referenced.get().title().resolve(Minecraft.getInstance().options.languageCode);
-                }
+        if (ShardContentHelper.getShard(stack) == null) return;
+
+        java.util.List<Either<FormattedText, TooltipComponent>> additions = new java.util.ArrayList<>();
+        String title = ShardContentHelper.displayTitle(stack);
+        if (!title.isEmpty() && !stack.getHoverName().getString().equals(title)) {
+            additions.add(Either.left((FormattedText) Component.literal(title)
+                    .withStyle(ChatFormatting.GOLD, ChatFormatting.ITALIC)));
+        }
+        String author = ShardContentHelper.displayAuthor(stack);
+        if (!author.isEmpty()) {
+            additions.add(Either.left((FormattedText) Component.translatable(
+                    "broken_chronicles.gui.tooltip.narrator", author).withStyle(ChatFormatting.GRAY)));
+        }
+        String description = ShardContentHelper.displayDescription(stack);
+        if (!description.isEmpty()) {
+            for (String lineText : description.split("\\n")) {
+                additions.add(Either.left((FormattedText) Component.literal(lineText)
+                        .withStyle(ChatFormatting.GRAY)));
             }
         }
-        if (title.isEmpty()) return;
-        Component component = Component.literal(title).withStyle(ChatFormatting.GOLD, ChatFormatting.ITALIC);
+        if (additions.isEmpty()) return;
+
         java.util.List<Either<FormattedText, TooltipComponent>> elements = event.getTooltipElements();
-        Either<FormattedText, TooltipComponent> line = Either.left((FormattedText) component);
-        if (elements.size() >= 1) {
-            elements.add(1, line);
-        } else {
-            elements.add(line);
+        int at = elements.isEmpty() ? 0 : 1;
+        for (Either<FormattedText, TooltipComponent> line : additions) {
+            elements.add(Math.min(at, elements.size()), line);
+            at++;
         }
     }
 
@@ -130,23 +144,29 @@ public final class ClientHandler {
         }
     }
 
+    /** 服务端要求打开某条条目（指令 /broken_chronicles read）。内容随包下发，本地没有这个数据包也能读。 */
+    public static void openEntry(littlh.broken_chronicles.network.GenericEntryDto dto) {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.level == null) return;
+        ShardEntry entry = ClientCollectionState.acceptEntry(dto);
+        if (entry == null) return;
+        mc.setScreen(new ReadingScreen(ItemStack.EMPTY, ResolvedContent.fromEntry(entry)));
+    }
+
     /** 打开阅读：原版成书用原版看书 UI（并自动收录）；其余走模组阅读界面。 */
     private static void openByStack(ItemStack stack) {
         Minecraft mc = Minecraft.getInstance();
         Level level = mc.level;
         if (level == null) return;
+        // 在背包/容器界面里按阅读键打开的，关掉阅读界面要退回那个界面，而不是直接回到游戏
+        Screen returnScreen = mc.screen instanceof AbstractContainerScreen<?> container ? container : null;
         if (stack.is(Items.WRITTEN_BOOK)) {
-            // 匹配注册表 book 条目（模组自定义书）→ 模组阅读界面；否则原版成书用原版看书 UI
-            Optional<ResolvedContent> resolved = ShardContentResolver.resolve(stack, level.registryAccess());
-            if (resolved.isPresent() && !resolved.get().id().startsWith("vanilla:")) {
-                PacketDistributor.sendToServer(new C2SShardRead(stack.copy()));
-                mc.setScreen(new ReadingScreen(stack.copy(), resolved.get()));
-                return;
-            }
+            // 原版成书一律直接调用原版看书 UI（就算它绑定了注册表 book 条目也一样），
+            // 模组这边只负责把它收录进编年史。
             BookViewScreen.BookAccess access = BookViewScreen.BookAccess.fromItem(stack);
             if (access != null) {
                 PacketDistributor.sendToServer(new C2SShardRead(stack.copy()));
-                mc.setScreen(new BookViewScreen(access));
+                mc.setScreen(new VanillaBookScreen(access, returnScreen));
             }
             return;
         }
@@ -154,7 +174,7 @@ public final class ClientHandler {
         LOGGER.debug("[破碎编年史] openByStack stack={} resolved={} id={}", stack, resolved.isPresent(),
                 resolved.map(r -> r.id()).orElse("-"));
         if (resolved.isPresent()) {
-            mc.setScreen(new ReadingScreen(stack.copy(), resolved.get()));
+            mc.setScreen(new ReadingScreen(stack.copy(), resolved.get(), returnScreen));
         }
     }
 

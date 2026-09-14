@@ -9,20 +9,45 @@
 ## Features
 
 - **Three record types**
-  - `page` — single-sheet fragments (paper, leaf, scrap...)
+  - `page` — single-sheet fragments (paper, leaf, scrap...); one fragment can hold a couple of pages
   - `book` — multi-page tomes, each page can have its own texture
   - `tag` — text bound to an item; the item keeps working normally (eat the apple, swing the sword)
-- **Read & collect** — right-click to read, or press **N** while hovering an item in your inventory. Reading automatically unlocks the entry in your chronicle.
-- **Light-up entries** — revealable entries show as `???` until discovered; optional auto-unlock on login.
-- **Writing ink** — craft *Lost Ink* (ink sac + glow ink sac + feather) and write your own pages, books, or item tags with a full multi-page editor (vanilla book & quill UI).
-- **Library** — inject entries into any loot table via the entry `loot_tables` field, or centrally via `data/<ns>/shards_loot/*.json` / `config/broken_chronicles/loot.json`.
-- **Fully data-driven** — datapack entries, per-page textures, per-language texts (`zh_cn` / `en_us`), markdown formatting, and item icons (`[item:minecraft:apple]`).
-- **Integration API** — use Broken Chronicles as a dependency and register entries from code via `ShardEntries.register(ShardEntry.builder(...))`.
+- **Read & collect** — right-click to read, or press **N** while hovering an item in your inventory. Reading automatically unlocks the entry in your chronicle. Opening something from the chronicle or from your inventory returns you to that screen when you close it.
+- **Light-up entries** — revealable entries show as `???` until discovered; optional auto-unlock on login. The `???` list is **off by default** (`showUnknownEntries`) and the built-in fragments are not revealable, so a fresh chronicle shows only what you have actually collected until a pack turns it on.
+- **Writing ink** — craft *Lost Ink* (glow ink sac + ink sac + feather, shapeless) to write your own pages, books or item tags with a full multi-page editor (vanilla book & quill UI; a fragment page holds few pages, a tome holds many). The editor is **off by default** (writingEnabled = false in the config): players only read and collect, and only pack authors turn it on. The server-side switch is synced to clients.
+   - `authorExportEnabled` (default false) adds an *Export JSON* button to the editor for turning what you wrote into a datapack entry.
+  - The editor's **Settings** button (top right) has two tabs. **This Entry** covers every field of the entry JSON — id, order, pinned, reveal, unlocked-by-default, world scope, creative tab, group/volume, narrator, description, hint, clue, autopagination, loot tables, story-chain requirements, runtime gates, load conditions, on-collect hooks, and the tag source filters — so a pack author can write the text, pick a background and configure the whole entry in one place, then export it. **Mod Settings** exposes the mod's own switches (including `allowCraftingModItems`, which removes the ink/inscription/transcribe recipes without touching the Chronicle recipe). Server-side rows go through `C2SConfigEdit` and need OP.
+- **Lost Inscription** — a block crafted from a ring of chiseled stone bricks around one Lost Ink. Write on it by holding Lost Ink and right-clicking; read it with an empty hand (reading collects the text). Sneak + right-click with a block makes the inscription *mimic* that block's look (creative only by default; `allowSurvivalInscriptionMimic` lets survival players do it too). Breaking it returns an item that keeps both the words and the mimic look, and structures store them.
+- **Transcribing** — vanilla ink sac + paper + anything already written (fragment page, tome, an inscribed item, a written book). It makes one identical copy: a sheet of paper plus ink gives you a second item that carries everything — enchantments, signature, custom name, and the mod's own text and background. The original stays in the grid, so you end up with two. More paper copies more (up to 8).
+- **Story chains** — an entry can declare `requires: ["other_mod:entry"]`: until the player has collected those entries it never rolls from loot tables, never spawns on tag items and is not shown in the collection book at all (not even as `???`). The check is per player, uses each player's own chronicle, and works in datapacks (`broken_chronicles:has_entry` loot condition) and from the API (`builder.requires(...)`, `StoryChain.satisfied(...)`).
+- **Library** — inject entries into any loot table via the entry `loot_tables` field, centrally via `data/<ns>/shards_loot/*.json` / `config/broken_chronicles/loot.json`, or from another mod with the vanilla loot modifier `broken_chronicles:add_entry`.
+- **Volumes** — entries can declare a `group` / `group_title`, and the chronicle shows them as volumes instead of one long list; there is also a search box (title / narrator / description / mod id) and an All / Collected filter. The collected `x/y` counter is off by default (`showCollectionProgress`).
+- **Per-player by default, shared when you want it** — everyone keeps their own chronicle. An entry written with `"scope": "world"` is a *world entry*: the first player who reads it unlocks it for everyone in that save.
+- **Load conditions & unlock hooks** — `conditions` (mod loaded / item exists / all / any / not) decide whether an entry is registered at all; `on_unlock` runs a datapack function, a loot table or a command the first time a player collects it.
+- **Config conditions** — the `broken_chronicles:config` datapack condition lets any pack gate its own recipes, loot tables or entries on this mod's switches, e.g. `{ "type": "broken_chronicles:config", "key": "allowCraftingModItems" }`.
+- **Author tools** — `/broken_chronicles list|validate|loot|unlock|lock|give|read`, plus three client-side helpers: `preview <id> [page]` opens any entry without collecting it and prints the real text-box size / line count / pixel overflow, `lint` checks every entry for missing textures, layout overflow, bad `[item:...]` references and missing translations (report written to `config/broken_chronicles/lint_report.txt`), and `export-lang <language> [--missing]` writes a translation template. Config templates/README are generated into `config/broken_chronicles/`; and (with `writingEnabled` + `authorExportEnabled` on) the in-game writing screen can export what you wrote straight into `config/broken_chronicles/entries/` as a datapack entry. A second tab of the writing screen (Settings -> This Entry) configures how that content behaves as an entry: order, reveal (??? before collection), unlocked-by-default, world scope, creative tab, group/volume, loot tables to inject into, and required entries for story chains.
+- **Translation overrides** — drop `config/broken_chronicles/lang/<language>.json` to override titles/body/pages of any entry (datapack, built-in or API-registered) without touching the entry JSON; unknown ids are reported by `validate`.
+- **Auto pagination** — a `book` written with a single long `text` is paginated automatically by real layout height (`autopage`, on by default for text-based books), so authors never have to count characters per page.
+- **Built-in content** — 24 bilingual guide fragments (iron golem, wither, beds...) ship with the mod. They are automatically injected into every vanilla chest loot table that contains paper, book or ink sac (`builtinLootEnabled`, `builtinLootChance`, `enableBuiltinEntries` in the config).
+- **Fully data-driven** — datapack entries, per-page textures, per-language texts (`zh_cn` / `en_us`), markdown formatting, item icons (`[item:minecraft:apple]`), and the placeholders `%READ_KEY%` (the player's read key) / `%PLAYER%` (the player's name).
+- **Integration API** — use Broken Chronicles as a dependency and register entries from code (`BrokenChroniclesApi.register(...)`), listen to `EntryCollectedEvent` / `EntryReadEvent`, register your own `%placeholders%` and custom `conditions` types. See `docs/api-integration.md`.
 
 ## Requirements
 
 - Minecraft **1.21.1**
 - **NeoForge** 21.1.248 or later
+
+## Version compatibility
+
+| Mod version | Minecraft | NeoForge    | Notes |
+| --- | --- | --- | --- |
+| 0.2.0 | 1.21.1 | 21.1.248+ | current release: unified reading UI, writing editor, lost inscriptions, transcribing, story chains & gates, loot library, author commands; entry `format` 1 |
+| 0.1.0 | 1.21.1 | 21.1.248+ | initial commit (no release); entry `format` 1 |
+
+Release notes for every version: [CHANGELOG.md](./CHANGELOG.md).
+
+Entry format version (`"format"` in the entry JSON) is independent of the mod version:
+the mod logs a warning when an entry asks for a newer format than it understands, and keeps loading the rest.
 
 ## Installation
 
@@ -32,12 +57,16 @@ Put the jar into your `mods` folder.
 
 - Right-click a fragment / book to read it; reading auto-collects it into the chronicle (the item stays in your inventory).
 - Press **N** (configurable in Controls) while hovering an item in your inventory to read it — works for mod pages/books, tagged items, vanilla written books and named paper.
+- **Vanilla books stay vanilla** — a written book always opens the vanilla book screen (the mod calls it directly, even when the book is bound to an entry); the mod only collects it. The entry's own text/background shows when you open it from the collection book.
 - Open the chronicle (craft: paper + feather + enchanted book) to browse collected entries.
+- Datapack / config entries can hide behind a story chain (`requires`), and loot injection respects it, so fragments appear in the order the story needs them.
 
 ## Content creation
 
-- Datapack entry format: `docs/data-format.md`
-- Integration API + UI text override: `docs/api-integration.md`
+- Documentation index: `docs/README.md` (Chinese; navigation, glossary, quick start)
+- Datapack entry format: `docs/data-format.md` (Chinese) + `docs/entry-schema.json` (JSON Schema)
+- Integration API + UI text override: `docs/api-integration.md` (Chinese)
+- Textures and UI layout spec: `docs/textures.md` (Chinese)
 - Publishing descriptions: `docs/modrinth.md` (Markdown), `docs/curseforge.md` (HTML)
 
 ## Building from source

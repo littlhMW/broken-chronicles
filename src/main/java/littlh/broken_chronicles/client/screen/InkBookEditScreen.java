@@ -3,7 +3,6 @@ package littlh.broken_chronicles.client.screen;
 import littlh.broken_chronicles.ModConfig;
 import littlh.broken_chronicles.network.C2SShardWrite;
 import com.google.common.collect.Lists;
-import com.mojang.blaze3d.platform.NativeImage;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.ChatFormatting;
@@ -14,18 +13,16 @@ import net.minecraft.client.StringSplitter;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.font.TextFieldHelper;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.BookViewScreen;
 import net.minecraft.client.gui.screens.inventory.PageButton;
 import net.minecraft.client.renderer.Rect2i;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
-import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.util.StringUtil;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -37,63 +34,61 @@ import org.apache.commons.lang3.mutable.MutableBoolean;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import javax.annotation.Nullable;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 /**
- * 破碎墨水书写界面：完整复刻原版书与笔（BookEditScreen）的编辑/签名/翻页交互。
+ * 失传墨水书写界面：贴着阅读界面的样子写。
+ * <ul>
+ *     <li>背景就是当前这一页选的纸张材质，和其它页一模一样地铺满屏幕（跟阅读界面共用 {@link PageCanvas}
+ *     的排版），点左侧的 ↑ / ↓ 换材质会<b>立刻</b>换成新的纸张。</li>
+ *     <li>标题、作者、描述都在同一个界面里填：左侧栏是它们的输入框，正文在纸面上直接写（原版书与笔的手感）。</li>
+ *     <li>翻页在纸面下方，完成 / 设置在右上角，互相不遮挡。</li>
+ * </ul>
  * 保存时把内容通过 C2SShardWrite 发给服务端，产出本模组的 page / book / tag 文字。
  */
 @OnlyIn(Dist.CLIENT)
 public class InkBookEditScreen extends Screen {
-    private static final int TEXT_WIDTH = 114;
-    private static final int TEXT_HEIGHT = 128;
-    private static final int IMAGE_WIDTH = 192;
-    private static final int IMAGE_HEIGHT = 192;
-    private static final Component EDIT_TITLE_LABEL = Component.translatable("book.editTitle");
-    private static final Component FINALIZE_WARNING_LABEL = Component.translatable("book.finalizeWarning");
-    private static final FormattedCharSequence BLACK_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.BLACK));
-    private static final FormattedCharSequence GRAY_CURSOR = FormattedCharSequence.forward("_", Style.EMPTY.withColor(ChatFormatting.GRAY));
+    /** 行高，与原版书 / 阅读界面一致。 */
+    private static final int LINE_HEIGHT = 9;
+    /** 正文里能打的字数上限（服务端也会截到 4096）。 */
+    private static final int MAX_PAGE_CHARS = 4096;
 
-    /** 写作模式：page / book / tag。 */
+    /** 写作模式：page / book / tag。决定目标物品与初始页数上限。 */
     private final String mode;
-    /** 最大页数：page（残页）最多 2 页，book/tag 最多 100 页。 */
-    private final int maxPages;
     /** 副手目标物品（纸 / 书与笔 / 要打 tag 的物品）。 */
     private final ItemStack target;
+    /** 这条内容作为「条目」时的属性（可点亮 / 战利品表 / 前置……），在设置界面里改，导出时写进 JSON。 */
+    private final littlh.broken_chronicles.client.EntryDraft entryDraft = new littlh.broken_chronicles.client.EntryDraft();
     private final Player owner;
     private boolean isModified;
-    private boolean isSigning;
+    /** 本界面是否已经把原版「保存世界中」提示关掉了（重建界面时不要重复计数）。 */
+    private boolean autosaveHidden;
     private int frameTick;
     private int currentPage;
     private final List<String> pages = Lists.newArrayList();
     private String title = "";
-    private String outputType;
+    private EditBox titleBox;
+    private EditBox authorBox;
+    private EditBox descriptionBox;
     private final TextFieldHelper pageEdit = new TextFieldHelper(
         this::getCurrentPageText,
         this::setCurrentPageText,
         this::getClipboard,
         this::setClipboard,
-        p_280853_ -> p_280853_.length() < 1024 && this.font.wordWrapHeight(p_280853_, 114) <= 128
-    );
-    private final TextFieldHelper titleEdit = new TextFieldHelper(
-        () -> this.title, p_98175_ -> this.title = p_98175_, this::getClipboard, this::setClipboard, p_98170_ -> p_98170_.length() < 16
+        // 一页写不下就不要再往里塞了：字数和「能显示得下的高度」双上限，跟原版书一样
+        text -> text.length() < MAX_PAGE_CHARS
+                && this.font.wordWrapHeight(text, textArea().width()) <= textArea().height()
     );
     private long lastClickTime;
     private int lastIndex = -1;
     private PageButton forwardButton;
     private PageButton backButton;
     private Button doneButton;
-    private Button signButton;
-    private Button finalizeButton;
-    private Button cancelButton;
-    private Button pageTypeButton;
-    private Button bookTypeButton;
+    private Button settingsButton;
+    private Button exportButton;
     private Button textureUpButton;
     private Button textureDownButton;
     /** 书写时可选的背景材质：textures/gui/page/ 下所有 png（含资源包/外部 assets 追加的）。 */
@@ -102,26 +97,44 @@ public class InkBookEditScreen extends Screen {
     private final List<ResourceLocation> selectedTextures = new ArrayList<>();
     @Nullable
     private InkBookEditScreen.DisplayCache displayCache = InkBookEditScreen.DisplayCache.EMPTY;
-    private Component pageMsg = CommonComponents.EMPTY;
-    private final Component ownerText;
+
+    /** 左侧栏（标题 / 作者 / 描述 / 背景）的布局，init() 里算好，render() 只负责画。 */
+    private int panelX;
+    private int panelW;
+    private int panelTop;
+    private int panelBottom;
+    private int writeModeLabelY;
+    private int pagesLabelY;
+    private int titleLabelY;
+    private int authorLabelY;
+    private int descLabelY;
+    private int textureLabelY;
+    private int previewY;
+    private int previewW;
+    private int previewH;
+    /** 换纸按钮那一行 / 文件名那一行的 y：两者要分开，不然文字会压在按钮上。 */
+    private int textureRowY;
+    private int textureNameY;
 
     public InkBookEditScreen(String mode, ItemStack target) {
         super(GameNarrator.NO_TITLE);
         this.mode = mode;
-        this.outputType = mode;
         this.target = target;
-        this.maxPages = "page".equals(mode) ? 2 : 100;
+        // 给物品打铭刻时，绑定物品默认就是手上这个，省得作者再去找 id
+        if ("tag".equals(mode) && target != null && !target.isEmpty()) {
+            this.entryDraft.item = net.minecraft.core.registries.BuiltInRegistries.ITEM
+                    .getKey(target.getItem()).toString();
+        }
         this.owner = Minecraft.getInstance().player;
         if (this.pages.isEmpty()) {
             this.pages.add("");
             this.selectedTextures.add(null);
         }
-        this.ownerText = Component.translatable("book.byAuthor", this.owner.getName()).withStyle(ChatFormatting.DARK_GRAY);
     }
 
-    private void setClipboard(String p_98148_) {
+    private void setClipboard(String text) {
         if (this.minecraft != null) {
-            TextFieldHelper.setClipboardContents(this.minecraft, p_98148_);
+            TextFieldHelper.setClipboardContents(this.minecraft, text);
         }
     }
 
@@ -133,6 +146,59 @@ public class InkBookEditScreen extends Screen {
         return this.pages.size();
     }
 
+    /** 当前产出类型下的页数上限：残页 / 铭刻只有一两页，残册才是多页。 */
+    private int maxPages() {
+        return switch (this.mode) {
+            case "page" -> Math.max(1, Math.min(8, ModConfig.PAGE_WRITING_MAX_PAGES.get()));
+            case "tag" -> Math.max(1, Math.min(8, ModConfig.TAG_WRITING_MAX_PAGES.get()));
+            default -> 100;
+        };
+    }
+
+    /** 当前页铺哪张纸：没选就是配置里的默认材质。 */
+    private ResourceLocation currentTexture() {
+        ResourceLocation selected = this.selectedTextures.size() > textureIndex()
+                ? this.selectedTextures.get(textureIndex()) : null;
+        if (selected != null && PageCanvas.exists(selected)) return selected;
+        return PageCanvas.defaultTexture();
+    }
+
+    /**
+     * 背景取第几页的选择：残册每一页各有一张，残页 / 铭刻整份只有一张（文字和背景都写在物品上，
+     * 保存时也只存这一张），所以永远用第 0 页的选择，免得在第二页换了背景却存不进去。
+     */
+    private int textureIndex() {
+        return "book".equals(this.mode) ? this.currentPage : 0;
+    }
+
+    /** 本帧的纸张排版（和阅读界面完全同一套）。 */
+    private PageCanvas.Layout layout() {
+        return PageCanvas.layout(this.width, this.height, currentTexture());
+    }
+
+    /** 作者（= 条目 JSON 里的 narrator）。存在条目草稿上，设置界面改的是同一个值。 */
+    String author() {
+        return this.entryDraft.narrator;
+    }
+
+    /** 描述（可选）：显示在物品 tooltip 与收集册的条目悬浮提示上。 */
+    String description() {
+        return this.entryDraft.description;
+    }
+
+    /** 在设置界面里改完作者/描述后，把左边栏输入框和纸面刷新一遍。 */
+    void syncPanelFromDraft() {
+        if (this.authorBox != null) this.authorBox.setValue(this.author());
+        if (this.descriptionBox != null) this.descriptionBox.setValue(this.description());
+        this.clearDisplayCache();
+        this.isModified = true;
+    }
+
+    /** 正文框（决定了打字的位置、换行宽度与能看到的高度）。 */
+    private PageCanvas.TextArea textArea() {
+        return PageCanvas.textArea(layout(), !this.author().isEmpty());
+    }
+
     @Override
     public void tick() {
         super.tick();
@@ -141,52 +207,141 @@ public class InkBookEditScreen extends Screen {
 
     @Override
     protected void init() {
-        this.clearDisplayCache();
-        this.signButton = this.addRenderableWidget(Button.builder(Component.translatable("book.signButton"), p_98177_ -> {
-            this.isSigning = true;
-            this.updateButtonVisibility();
-        }).bounds(this.width / 2 - 100, 196, 98, 20).build());
-        this.doneButton = this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, p_280851_ -> {
-            // 先进入署名界面输入标题（book 必须署名；page/tag 可直接发布）
-            if (this.isModified) {
-                this.isSigning = true;
-                this.updateButtonVisibility();
-            } else {
-                this.minecraft.setScreen(null);
-            }
-        }).bounds(this.width / 2 + 2, 196, 98, 20).build());
-        this.finalizeButton = this.addRenderableWidget(Button.builder(Component.translatable("book.finalizeButton"), p_280852_ -> {
-            if (this.isSigning) {
-                this.saveChanges(true);
-                this.minecraft.setScreen(null);
-            }
-        }).bounds(this.width / 2 - 100, 196, 98, 20).build());
-        this.cancelButton = this.addRenderableWidget(Button.builder(CommonComponents.GUI_CANCEL, p_98157_ -> {
-            if (this.isSigning) {
-                this.isSigning = false;
-            }
-            this.updateButtonVisibility();
-        }).bounds(this.width / 2 + 2, 196, 98, 20).build());
-        int i = (this.width - 192) / 2;
-        int j = 2;
-        if ("book".equals(this.mode)) {
-            this.pageTypeButton = this.addRenderableWidget(Button.builder(
-                    Component.translatable("broken_chronicles.gui.type.page"), b -> this.outputType = "page")
-                    .bounds(i + 24, 8, 46, 12).build());
-            this.bookTypeButton = this.addRenderableWidget(Button.builder(
-                    Component.translatable("broken_chronicles.gui.type.book"), b -> this.outputType = "book")
-                    .bounds(i + 74, 8, 46, 12).build());
+        if (!autosaveHidden) {
+            littlh.broken_chronicles.client.AutosaveIndicator.hide();
+            autosaveHidden = true;
         }
-        this.forwardButton = this.addRenderableWidget(new PageButton(i + 116, 159, true, p_98144_ -> this.pageForward(), true));
-        this.backButton = this.addRenderableWidget(new PageButton(i + 43, 159, false, p_98113_ -> this.pageBack(), true));
+        this.clearDisplayCache();
         this.collectAvailableTextures();
-        int texBtnX = i - 28;
-        int centerY = j + 96;
-        this.textureUpButton = this.addRenderableWidget(Button.builder(Component.literal("\u2191"), b -> this.cycleTexture(-1))
-                .bounds(texBtnX, centerY - 44, 20, 16).build());
-        this.textureDownButton = this.addRenderableWidget(Button.builder(Component.literal("\u2193"), b -> this.cycleTexture(1))
-                .bounds(texBtnX, centerY - 22, 20, 16).build());
+
+        // 左侧栏宽度跟着纸张走：纸的左边缘让出一点空隙，剩下的都给输入框
+        int contentLeft = layout().contentX();
+        this.panelX = 4;
+        this.panelW = Math.max(70, Math.min(170, contentLeft - this.panelX - 6));
+        this.panelTop = 2;
+        int y = 4;
+
+        // 载体是副手那个物品说了算：纸 / 残页写出来就是残页，书与笔 / 残册写出来就是残册，所以这里没有类型切换
+        this.writeModeLabelY = y;
+        this.pagesLabelY = y + 11;
+        y += 24;
+
+        // 标题
+        this.titleLabelY = y;
+        this.titleBox = this.addPanelBox(y, 48,
+                Component.translatable("broken_chronicles.gui.write.title.hint"), this.title, value -> {
+                    this.title = value;
+                    this.isModified = true;
+                    this.clearDisplayCache();
+                });
+        y += 27;
+
+        // 作者（可选）
+        this.authorLabelY = y;
+        this.authorBox = this.addPanelBox(y, 32,
+                Component.translatable("broken_chronicles.gui.write.author.hint"), this.author(), value -> {
+                    this.entryDraft.narrator = value;
+                    this.isModified = true;
+                    // 纸上标题下面会多一行署名，正文要跟着让位
+                    this.clearDisplayCache();
+                });
+        y += 27;
+
+        // 描述（可选）
+        this.descLabelY = y;
+        this.descriptionBox = this.addPanelBox(y, 256,
+                Component.translatable("broken_chronicles.gui.description.hint"), this.description(), value -> {
+                    this.entryDraft.description = value;
+                    this.isModified = true;
+                });
+        y += 27;
+
+        // 背景材质：预览当前这一页铺的纸 + 上下换
+        this.textureLabelY = y;
+        this.previewY = y + 10;
+        this.previewW = this.panelW;
+        this.previewH = Math.max(16, Math.min(50, Math.round(this.previewW * 9.0F / 16.0F)));
+        // 换纸按钮在预览框下面一行，文件名再下一行：文字不再压在按钮上
+        this.textureRowY = this.previewY + this.previewH + 4;
+        this.textureNameY = this.textureRowY + 17;
+        this.textureUpButton = this.addRenderableWidget(Button.builder(Component.literal("\u2191"),
+                        b -> cycleTexture(-1))
+                .bounds(this.panelX, this.textureRowY, 18, 14).build());
+        this.textureDownButton = this.addRenderableWidget(Button.builder(Component.literal("\u2193"),
+                        b -> cycleTexture(1))
+                .bounds(this.panelX + 22, this.textureRowY, 18, 14).build());
+        y = this.textureNameY + 12;
+
+        // 导出成数据包条目 JSON：作者工具，默认关闭（authorExportEnabled）
+        if (ModConfig.AUTHOR_EXPORT_ENABLED.get()) {
+            this.exportButton = this.addRenderableWidget(Button.builder(
+                            Component.translatable("broken_chronicles.gui.export"), b -> this.exportEntry())
+                    .bounds(this.panelX, y, this.panelW, 14).build());
+            y += 18;
+        }
+        // 左侧栏的底不能越出屏幕（小窗口下也不至于把界面顶掉）
+        this.panelBottom = Math.min(y + 2, this.height - 4);
+
+        // 翻页：贴在纸面下方，跟阅读界面同一个位置
+        PageCanvas.Layout layout = layout();
+        int rowY = layout.contentY() + layout.contentH() - 22;
+        this.backButton = this.addRenderableWidget(new PageButton(
+                layout.contentX() + 6, rowY, false, p -> this.pageBack(), true));
+        this.forwardButton = this.addRenderableWidget(new PageButton(
+                layout.contentX() + layout.contentW() - 26, rowY, true, p -> this.pageForward(), true));
+
+        // 右上角：完成 + 设置（都在纸面右上方的空白里，不压正文）
+        this.doneButton = this.addRenderableWidget(Button.builder(CommonComponents.GUI_DONE, b -> {
+            this.saveChanges();
+            this.minecraft.setScreen(null);
+        }).bounds(this.width - 154, 4, 74, 16).build());
+        this.settingsButton = this.addRenderableWidget(Button.builder(
+                        Component.translatable("broken_chronicles.gui.settings.button"),
+                        b -> this.minecraft.setScreen(new InkSettingsScreen(this, this.entryDraft,
+                                this.mode, this.targetItemId(), this.availableTextures)))
+                .bounds(this.width - 76, 4, 72, 16).build());
+
         this.updateButtonVisibility();
+    }
+
+    /** 左侧栏一行输入框：上面留 10px 画标签。 */
+    private EditBox addPanelBox(int labelY, int maxLength, Component hint, String initial,
+                                java.util.function.Consumer<String> responder) {
+        EditBox box = new EditBox(this.font, this.panelX, labelY + 10, this.panelW, 14,
+                Component.translatable("broken_chronicles.gui.writing"));
+        box.setMaxLength(maxLength);
+        box.setHint(hint.copy().withStyle(ChatFormatting.DARK_GRAY));
+        box.setValue(initial == null ? "" : initial);
+        box.setResponder(value -> responder.accept(value == null ? "" : value));
+        return this.addRenderableWidget(box);
+    }
+
+
+    /** 正在写的那个物品（tag 模式下文字挂在它身上）。 */
+    private String targetItemId() {
+        if (this.target == null || this.target.isEmpty()) return "";
+        return net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(this.target.getItem()).toString();
+    }
+
+    /** 把当前内容导出成 config/broken_chronicles/entries/<id>.json。 */
+    void exportEntry() {
+        this.eraseEmptyTrailingPages();
+        List<ResourceLocation> textures = new ArrayList<>();
+        if ("book".equals(this.mode)) {
+            for (int i = 0; i < this.pages.size(); i++) {
+                textures.add(i < this.selectedTextures.size() ? this.selectedTextures.get(i) : null);
+            }
+        } else {
+            textures.add(this.selectedTextures.isEmpty() ? null : this.selectedTextures.get(0));
+        }
+        String fileName = littlh.broken_chronicles.client.EntryExporter.export(
+                this.mode, this.title, this.author(), this.description(),
+                new ArrayList<>(this.pages), textures, this.entryDraft);
+        if (this.minecraft != null && this.minecraft.player != null) {
+            this.minecraft.player.displayClientMessage(fileName.isEmpty()
+                    ? Component.translatable("broken_chronicles.gui.export.failed")
+                    : Component.translatable("broken_chronicles.gui.export.done", fileName), false);
+        }
     }
 
     private void pageBack() {
@@ -211,25 +366,28 @@ public class InkBookEditScreen extends Screen {
     }
 
     private void updateButtonVisibility() {
-        this.backButton.visible = !this.isSigning && this.currentPage > 0;
-        this.forwardButton.visible = !this.isSigning;
-        this.doneButton.visible = !this.isSigning;
-        this.signButton.visible = !this.isSigning;
-        this.cancelButton.visible = this.isSigning;
-        this.finalizeButton.visible = this.isSigning;
-        this.finalizeButton.active = "book".equals(this.mode) ? !StringUtil.isBlank(this.title) : true;
-        boolean typeSelect = !this.isSigning && "book".equals(this.mode);
-        if (this.pageTypeButton != null) {
-            this.pageTypeButton.visible = typeSelect;
-            this.bookTypeButton.visible = typeSelect;
-        }
-        boolean textureSelect = !this.isSigning && !this.availableTextures.isEmpty();
+        boolean multiPage = this.maxPages() > 1;
+        this.backButton.visible = multiPage && this.currentPage > 0;
+        // 一页写完才会出现「下一页」，免得空白的残页看起来像一本书
+        this.forwardButton.visible = multiPage
+                && (this.currentPage > 0 || !this.getCurrentPageText().isEmpty());
+        this.doneButton.visible = true;
+        if (this.settingsButton != null) this.settingsButton.visible = true;
+        if (this.exportButton != null) this.exportButton.visible = true;
+
+        boolean textureSelect = !this.availableTextures.isEmpty();
         if (this.textureUpButton != null) {
             this.textureUpButton.visible = textureSelect;
             this.textureDownButton.visible = textureSelect;
         }
+        // 翻页按钮位置跟着纸面走
+        PageCanvas.Layout layout = layout();
+        int rowY = layout.contentY() + layout.contentH() - 22;
+        if (this.backButton != null) {
+            this.backButton.setPosition(layout.contentX() + 6, rowY);
+            this.forwardButton.setPosition(layout.contentX() + layout.contentW() - 26, rowY);
+        }
     }
-
     /** 收集 textures/gui/page/ 下所有背景材质（含资源包、外部 assets 追加的）。 */
     private void collectAvailableTextures() {
         this.availableTextures.clear();
@@ -239,24 +397,28 @@ public class InkBookEditScreen extends Screen {
             List<ResourceLocation> list = new ArrayList<>(found.keySet());
             list.sort(Comparator.comparing(ResourceLocation::toString));
             for (ResourceLocation rl : list) {
-                // 过滤已删除的旧图（scrap/diary/leaf），防止历史资源残留出现在待选列表
+                // 过滤已删除的旧图与排版范例，防止它们出现在待选列表里
                 String path = rl.getPath();
                 if (path.endsWith("scrap.png") || path.endsWith("diary.png") || path.endsWith("leaf.png")) continue;
+                if (path.endsWith("reading_template.png") || path.endsWith("template.png")) continue;
                 this.availableTextures.add(rl);
             }
         } catch (Exception ignored) {
         }
     }
 
-    /** 上下按钮：切换当前页的背景材质（在文件夹列表里循环）。 */
+    /** 上下按钮：切换当前页的背景材质（在文件夹列表里循环），纸面立刻跟着换。 */
     private void cycleTexture(int delta) {
         if (this.availableTextures.isEmpty()) return;
-        while (this.selectedTextures.size() <= this.currentPage) this.selectedTextures.add(null);
-        ResourceLocation current = this.selectedTextures.get(this.currentPage);
+        int index = textureIndex();
+        while (this.selectedTextures.size() <= index) this.selectedTextures.add(null);
+        ResourceLocation current = this.selectedTextures.get(index);
         int idx = current == null ? (delta > 0 ? -1 : 0) : this.availableTextures.indexOf(current);
         int next = (idx + delta + this.availableTextures.size()) % this.availableTextures.size();
-        this.selectedTextures.set(this.currentPage, this.availableTextures.get(next));
+        this.selectedTextures.set(index, this.availableTextures.get(next));
         this.isModified = true;
+        // 换了纸，正文排版（跟着纸张非透明区域走）也要重算
+        this.clearDisplayCache();
     }
 
     private void eraseEmptyTrailingPages() {
@@ -268,28 +430,27 @@ public class InkBookEditScreen extends Screen {
         }
     }
 
-    /** 保存：把当前内容发给服务端，产出 page / book / tag。signed=true 时带上签名标题。 */
-    private void saveChanges(boolean signed) {
-        if (this.isModified) {
-            this.eraseEmptyTrailingPages();
-            String outTitle = signed ? this.title.trim() : "";
-            List<String> outPages = new ArrayList<>(this.pages);
-            List<String> outTextures = new ArrayList<>();
-            if ("book".equals(this.outputType)) {
-                for (int i = 0; i < outPages.size(); i++) {
-                    ResourceLocation t = i < this.selectedTextures.size() ? this.selectedTextures.get(i) : null;
-                    outTextures.add(t == null ? "" : t.toString());
-                }
-            } else {
-                ResourceLocation t = this.selectedTextures.isEmpty() ? null : this.selectedTextures.get(0);
+    /** 保存：把当前内容发给服务端，产出 page / book / tag。 */
+    private void saveChanges() {
+        if (!this.isModified) return;
+        this.eraseEmptyTrailingPages();
+        List<String> outPages = new ArrayList<>(this.pages);
+        List<String> outTextures = new ArrayList<>();
+        if ("book".equals(this.mode)) {
+            for (int i = 0; i < outPages.size(); i++) {
+                ResourceLocation t = i < this.selectedTextures.size() ? this.selectedTextures.get(i) : null;
                 outTextures.add(t == null ? "" : t.toString());
             }
-            PacketDistributor.sendToServer(new C2SShardWrite(this.outputType, outTitle, outPages, outTextures));
+        } else {
+            ResourceLocation t = this.selectedTextures.isEmpty() ? null : this.selectedTextures.get(0);
+            outTextures.add(t == null ? "" : t.toString());
         }
+        PacketDistributor.sendToServer(new C2SShardWrite(this.mode, this.title, this.description(),
+                this.author(), outPages, outTextures));
     }
 
     private void appendPageToBook() {
-        if (this.getNumPages() < this.maxPages) {
+        if (this.getNumPages() < this.maxPages()) {
             this.pages.add("");
             this.selectedTextures.add(null);
             this.isModified = true;
@@ -297,95 +458,97 @@ public class InkBookEditScreen extends Screen {
     }
 
     @Override
-    public boolean keyPressed(int p_98100_, int p_98101_, int p_98102_) {
-        if (super.keyPressed(p_98100_, p_98101_, p_98102_)) {
-            return true;
-        } else if (this.isSigning) {
-            return this.titleKeyPressed(p_98100_, p_98101_, p_98102_);
-        } else {
-            boolean flag = this.bookKeyPressed(p_98100_, p_98101_, p_98102_);
-            if (flag) {
-                this.clearDisplayCache();
-                return true;
-            } else {
-                return false;
-            }
+    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
+        // ESC 交给原版（关界面）
+        if (keyCode == 256 && this.shouldCloseOnEsc()) {
+            return super.keyPressed(keyCode, scanCode, modifiers);
         }
+        // 只有标题 / 作者 / 描述这三个输入框能拿走键盘，其余按键一律给正文。
+        // 这里刻意不调 super：原版 Screen.keyPressed 碰到方向键 / TAB 会做焦点漫游，
+        // 会把键盘焦点从正文抢到按钮上，点过输入框之后就更回不来了。
+        if (this.getFocused() instanceof EditBox box && box.keyPressed(keyCode, scanCode, modifiers)) {
+            return true;
+        }
+        boolean handled = this.bookKeyPressed(keyCode, scanCode, modifiers);
+        if (handled) {
+            this.clearDisplayCache();
+            this.updateButtonVisibility();
+            return true;
+        }
+        return false;
+    }
+
+    /** 刚打开界面时键盘默认给正文，别让原版把焦点直接塞进标题输入框。 */
+    @Override
+    protected void setInitialFocus() {
+        this.setFocused(null);
     }
 
     @Override
-    public boolean charTyped(char p_98085_, int p_98086_) {
-        if (super.charTyped(p_98085_, p_98086_)) {
+    public boolean charTyped(char codePoint, int modifiers) {
+        if (super.charTyped(codePoint, modifiers)) {
             return true;
-        } else if (this.isSigning) {
-            boolean flag = this.titleEdit.charTyped(p_98085_);
-            if (flag) {
-                this.updateButtonVisibility();
-                this.isModified = true;
-                return true;
-            } else {
-                return false;
-            }
-        } else if (StringUtil.isAllowedChatCharacter(p_98085_)) {
-            this.pageEdit.insertText(Character.toString(p_98085_));
-            this.clearDisplayCache();
-            return true;
-        } else {
-            return false;
         }
+        if (StringUtil.isAllowedChatCharacter(codePoint)) {
+            this.pageEdit.insertText(Character.toString(codePoint));
+            this.clearDisplayCache();
+            this.updateButtonVisibility();
+            return true;
+        }
+        return false;
     }
 
-    private boolean bookKeyPressed(int p_98153_, int p_98154_, int p_98155_) {
-        if (Screen.isSelectAll(p_98153_)) {
+    private boolean bookKeyPressed(int keyCode, int scanCode, int modifiers) {
+        if (Screen.isSelectAll(keyCode)) {
             this.pageEdit.selectAll();
             return true;
-        } else if (Screen.isCopy(p_98153_)) {
+        } else if (Screen.isCopy(keyCode)) {
             this.pageEdit.copy();
             return true;
-        } else if (Screen.isPaste(p_98153_)) {
+        } else if (Screen.isPaste(keyCode)) {
             this.pageEdit.paste();
             return true;
-        } else if (Screen.isCut(p_98153_)) {
+        } else if (Screen.isCut(keyCode)) {
             this.pageEdit.cut();
             return true;
         } else {
-            TextFieldHelper.CursorStep textfieldhelper$cursorstep = Screen.hasControlDown()
-                ? TextFieldHelper.CursorStep.WORD
-                : TextFieldHelper.CursorStep.CHARACTER;
-            switch (p_98153_) {
+            TextFieldHelper.CursorStep step = Screen.hasControlDown()
+                    ? TextFieldHelper.CursorStep.WORD
+                    : TextFieldHelper.CursorStep.CHARACTER;
+            switch (keyCode) {
                 case 257:
                 case 335:
                     this.pageEdit.insertText("\n");
                     return true;
                 case 259:
-                    this.pageEdit.removeFromCursor(-1, textfieldhelper$cursorstep);
+                    this.pageEdit.removeFromCursor(-1, step);
                     return true;
                 case 261:
-                    this.pageEdit.removeFromCursor(1, textfieldhelper$cursorstep);
+                    this.pageEdit.removeFromCursor(1, step);
                     return true;
                 case 262:
-                    this.pageEdit.moveBy(1, Screen.hasShiftDown(), textfieldhelper$cursorstep);
+                    this.pageEdit.moveBy(1, Screen.hasShiftDown(), step);
                     return true;
                 case 263:
-                    this.pageEdit.moveBy(-1, Screen.hasShiftDown(), textfieldhelper$cursorstep);
+                    this.pageEdit.moveBy(-1, Screen.hasShiftDown(), step);
                     return true;
                 case 264:
-                    this.keyDown();
+                    this.moveLineDown();
                     return true;
                 case 265:
-                    this.keyUp();
+                    this.moveLineUp();
                     return true;
                 case 266:
-                    this.backButton.onPress();
+                    this.pageForward();
                     return true;
                 case 267:
-                    this.forwardButton.onPress();
+                    this.pageBack();
                     return true;
                 case 268:
-                    this.keyHome();
+                    this.moveToLineStart();
                     return true;
                 case 269:
-                    this.keyEnd();
+                    this.moveToLineEnd();
                     return true;
                 default:
                     return false;
@@ -393,255 +556,245 @@ public class InkBookEditScreen extends Screen {
         }
     }
 
-    private void keyUp() {
-        this.changeLine(-1);
-    }
-
-    private void keyDown() {
-        this.changeLine(1);
-    }
-
-    private void changeLine(int p_98098_) {
+    private void moveLineDown() {
+        InkBookEditScreen.DisplayCache cache = this.getDisplayCache();
         int i = this.pageEdit.getCursorPos();
-        int j = this.getDisplayCache().changeLine(i, p_98098_);
-        this.pageEdit.setCursorPos(j, Screen.hasShiftDown());
+        this.pageEdit.setCursorPos(cache.changeLine(i, 1), Screen.hasShiftDown());
+        this.clearDisplayCache();
     }
 
-    private void keyHome() {
-        if (Screen.hasControlDown()) {
-            this.pageEdit.setCursorToStart(Screen.hasShiftDown());
-        } else {
-            int i = this.pageEdit.getCursorPos();
-            int j = this.getDisplayCache().findLineStart(i);
-            this.pageEdit.setCursorPos(j, Screen.hasShiftDown());
-        }
+    private void moveLineUp() {
+        InkBookEditScreen.DisplayCache cache = this.getDisplayCache();
+        int i = this.pageEdit.getCursorPos();
+        this.pageEdit.setCursorPos(cache.changeLine(i, -1), Screen.hasShiftDown());
+        this.clearDisplayCache();
     }
 
-    private void keyEnd() {
-        if (Screen.hasControlDown()) {
-            this.pageEdit.setCursorToEnd(Screen.hasShiftDown());
-        } else {
-            InkBookEditScreen.DisplayCache bookeditscreen$displaycache = this.getDisplayCache();
-            int i = this.pageEdit.getCursorPos();
-            int j = bookeditscreen$displaycache.findLineEnd(i);
-            this.pageEdit.setCursorPos(j, Screen.hasShiftDown());
-        }
+    private void moveToLineStart() {
+        InkBookEditScreen.DisplayCache cache = this.getDisplayCache();
+        int i = this.pageEdit.getCursorPos();
+        this.pageEdit.setCursorPos(cache.findLineStart(i), Screen.hasShiftDown());
+        this.clearDisplayCache();
     }
 
-    private boolean titleKeyPressed(int p_98164_, int p_98165_, int p_98166_) {
-        switch (p_98164_) {
-            case 257:
-            case 335:
-                if (!this.title.isEmpty()) {
-                    this.saveChanges(true);
-                    this.minecraft.setScreen(null);
-                }
-                return true;
-            case 259:
-                this.titleEdit.removeCharsFromCursor(-1);
-                this.updateButtonVisibility();
-                this.isModified = true;
-                return true;
-            default:
-                return false;
-        }
+    private void moveToLineEnd() {
+        InkBookEditScreen.DisplayCache cache = this.getDisplayCache();
+        int i = this.pageEdit.getCursorPos();
+        this.pageEdit.setCursorPos(cache.findLineEnd(i), Screen.hasShiftDown());
+        this.clearDisplayCache();
     }
 
     private String getCurrentPageText() {
-        return this.currentPage >= 0 && this.currentPage < this.pages.size() ? this.pages.get(this.currentPage) : "";
+        return this.currentPage >= 0 && this.currentPage < this.pages.size()
+                ? this.pages.get(this.currentPage) : "";
     }
 
-    private void setCurrentPageText(String p_98159_) {
+    private void setCurrentPageText(String text) {
         if (this.currentPage >= 0 && this.currentPage < this.pages.size()) {
-            this.pages.set(this.currentPage, p_98159_);
+            this.pages.set(this.currentPage, text);
             this.isModified = true;
             this.clearDisplayCache();
         }
     }
-
     @Override
-    public void render(GuiGraphics p_281724_, int p_282965_, int p_283294_, float p_281293_) {
-        super.render(p_281724_, p_282965_, p_283294_, p_281293_);
-        this.setFocused(null);
-        int i = (this.width - 192) / 2;
-        int j = 2;
-        if (this.isSigning) {
-            boolean flag = this.frameTick / 6 % 2 == 0;
-            FormattedCharSequence formattedcharsequence = FormattedCharSequence.composite(
-                FormattedCharSequence.forward(this.title, Style.EMPTY), flag ? BLACK_CURSOR : GRAY_CURSOR
-            );
-            int k = this.font.width(EDIT_TITLE_LABEL);
-            p_281724_.drawString(this.font, EDIT_TITLE_LABEL, i + 36 + (114 - k) / 2, 34, 0, false);
-            int l = this.font.width(formattedcharsequence);
-            p_281724_.drawString(this.font, formattedcharsequence, i + 36 + (114 - l) / 2, 50, 0, false);
-            int i1 = this.font.width(this.ownerText);
-            p_281724_.drawString(this.font, this.ownerText, i + 36 + (114 - i1) / 2, 60, 0, false);
-            p_281724_.drawWordWrap(this.font, FINALIZE_WARNING_LABEL, i + 36, 82, 114, 0);
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        // 顺序：纸面 + 左侧栏底（renderBackground）→ 控件（输入框、按钮）→ 纸上的标题与正文 → 左侧栏标签
+        super.render(guiGraphics, mouseX, mouseY, partialTick);
+
+        PageCanvas.Layout layout = layout();
+        int cx = layout.contentX();
+        int cy = layout.contentY();
+        int cw = layout.contentW();
+        int ch = layout.contentH();
+
+        // 标题：和阅读界面同一行
+        int titleY = PageCanvas.titleY(layout);
+        if (!this.title.isEmpty()) {
+            guiGraphics.drawString(this.font, this.title,
+                    cx + cw / 2 - this.font.width(this.title) / 2, titleY, 0xFF3F2F1F, false);
         } else {
-            if (this.pageTypeButton != null && this.pageTypeButton.visible) {
-                this.renderTypeSelected(p_281724_, "page".equals(this.outputType) ? this.pageTypeButton : this.bookTypeButton);
-            }
-            int j1 = this.font.width(this.pageMsg);
-            p_281724_.drawString(this.font, this.pageMsg, i - j1 + 192 - 44, 18, 0, false);
-            InkBookEditScreen.DisplayCache bookeditscreen$displaycache = this.getDisplayCache();
-            for (InkBookEditScreen.LineInfo bookeditscreen$lineinfo : bookeditscreen$displaycache.lines) {
-                p_281724_.drawString(this.font, bookeditscreen$lineinfo.asComponent, bookeditscreen$lineinfo.x, bookeditscreen$lineinfo.y, -16777216, false);
-            }
-            this.renderHighlight(p_281724_, bookeditscreen$displaycache.selection);
-            this.renderCursor(p_281724_, bookeditscreen$displaycache.cursor, bookeditscreen$displaycache.cursorAtEnd);
-            this.renderTextureSelector(p_281724_);
+            Component placeholder = Component.translatable("broken_chronicles.gui.write.title.placeholder");
+            guiGraphics.drawString(this.font, placeholder,
+                    cx + cw / 2 - this.font.width(placeholder) / 2, titleY, 0x807A6A55, false);
+        }
+        // 作者：紧贴标题下方一行，颜色更淡（阅读界面里就是这样显示的）
+        if (!this.author().isEmpty()) {
+            guiGraphics.drawString(this.font, this.author(),
+                    cx + cw / 2 - this.font.width(this.author()) / 2, titleY + 11, 0xFF7A6A55, false);
+        }
+
+        // 正文
+        InkBookEditScreen.DisplayCache cache = this.getDisplayCache();
+        for (InkBookEditScreen.LineInfo line : cache.lines) {
+            guiGraphics.drawString(this.font, line.asComponent, line.x, line.y, -16777216, false);
+        }
+        this.renderHighlight(guiGraphics, cache.selection);
+        this.renderCursor(guiGraphics, cache.cursor, cache.cursorAtEnd);
+
+        // 页码：贴在纸面下方中间，跟阅读界面同一个位置
+        if (this.getNumPages() > 1) {
+            String pageNumber = (this.currentPage + 1) + "/" + this.getNumPages();
+            guiGraphics.drawString(this.font, pageNumber,
+                    cx + cw / 2 - this.font.width(pageNumber) / 2, cy + ch - 20, 0xFF3F2F1F, false);
+        }
+
+        this.renderPanel(guiGraphics);
+
+        // 书写功能没开时（只有 OP 能走到这里）：提示一下，免得写完发现什么都没发生
+        if (!littlh.broken_chronicles.client.ClientCollectionState.writingEnabled()) {
+            Component notice = Component.translatable("broken_chronicles.gui.writing.disabled_notice");
+            // 抬到快捷栏上方一行：压在快捷栏上就看不清了
+            guiGraphics.drawCenteredString(this.font, notice, this.width / 2, this.height - 34, 0xFFFF8080);
         }
     }
 
-    /** 左侧预览：当前页选中的背景材质 + 文件名。 */
-    private void renderTextureSelector(GuiGraphics guiGraphics) {
-        if (this.isSigning || this.availableTextures.isEmpty()) return;
-        ResourceLocation tex = this.currentPage < this.selectedTextures.size() ? this.selectedTextures.get(this.currentPage) : null;
-        if (tex == null) {
-            List<? extends String> defaults = ModConfig.DEFAULT_PAGE_TEXTURES.get();
-            if (defaults.isEmpty()) return;
-            tex = ResourceLocation.parse(defaults.get(0));
-        }
-        int i = (this.width - 192) / 2;
-        int j = 2;
-        int boxX = i - 96;
-        int boxY = j + 26;
-        int boxW = 64;
-        int boxH = 36;
-        int[] size = textureSize(tex);
+    /** 左侧栏的标签与背景预览（输入框和按钮由控件系统自己画，底色在 renderBackground 里铺）。 */
+    private void renderPanel(GuiGraphics guiGraphics) {
+        // 这一行写的就是载体名：残页 / 残册 / 铭刻，跟副手拿的东西一致
+        guiGraphics.drawString(this.font,
+                Component.translatable("broken_chronicles.gui.writing.mode." + this.mode),
+                this.panelX, this.writeModeLabelY, 0xFFE8DCC4, false);
+        guiGraphics.drawString(this.font, Component.translatable("broken_chronicles.gui.writing.pages",
+                        Math.min(this.currentPage + 1, this.getNumPages()), this.getNumPages(), this.maxPages()),
+                this.panelX, this.pagesLabelY, 0xFF9A8A70, false);
+        guiGraphics.drawString(this.font, Component.translatable("broken_chronicles.gui.title"),
+                this.panelX, this.titleLabelY, 0xFFD8C9A8, false);
+        guiGraphics.drawString(this.font, Component.translatable("broken_chronicles.gui.author"),
+                this.panelX, this.authorLabelY, 0xFFD8C9A8, false);
+        guiGraphics.drawString(this.font, Component.translatable("broken_chronicles.gui.description"),
+                this.panelX, this.descLabelY, 0xFFD8C9A8, false);
+        guiGraphics.drawString(this.font, Component.translatable("broken_chronicles.gui.texture"),
+                this.panelX, this.textureLabelY, 0xFFD8C9A8, false);
+
+        // 背景预览：等比缩到框里，下面写文件名
+        ResourceLocation tex = currentTexture();
+        int[] size = PageCanvas.bounds(tex);
         int texW = Math.max(1, size[0]);
         int texH = Math.max(1, size[1]);
-        double scale = Math.min((double) boxW / texW, (double) boxH / texH);
+        double scale = Math.min((double) this.previewW / texW, (double) this.previewH / texH);
         int w = Math.max(1, (int) Math.round(texW * scale));
         int h = Math.max(1, (int) Math.round(texH * scale));
-        guiGraphics.fill(boxX - 1, boxY - 1, boxX + boxW + 1, boxY + boxH + 1, 0x80000000);
-        guiGraphics.blit(tex, boxX + (boxW - w) / 2, boxY + (boxH - h) / 2, w, h, 0, 0, texW, texH, texW, texH);
+        guiGraphics.fill(this.panelX - 1, this.previewY - 1, this.panelX + this.previewW + 1,
+                this.previewY + this.previewH + 1, 0x80000000);
+        guiGraphics.blit(tex, this.panelX + (this.previewW - w) / 2, this.previewY + (this.previewH - h) / 2,
+                w, h, 0, 0, texW, texH, texW, texH);
         String path = tex.getPath();
         String name = path.substring(path.lastIndexOf('/') + 1);
-        guiGraphics.drawString(this.font, name, boxX, boxY + boxH + 4, 0xFFFFFFFF, false);
+        guiGraphics.drawString(this.font, this.font.plainSubstrByWidth(name, Math.max(20, this.panelW)),
+                this.panelX, this.textureNameY, 0xFFFFFFFF, false);
     }
 
-    /** 读取材质实际尺寸 {w, h}，带缓存；失败回退 512x288。 */
-    private static final Map<ResourceLocation, int[]> TEXTURE_SIZES = new HashMap<>();
 
-    private static int[] textureSize(ResourceLocation location) {
-        int[] cached = TEXTURE_SIZES.get(location);
-        if (cached != null) return cached;
-        int[] fallback = new int[]{512, 288};
-        try {
-            java.util.Optional<Resource> resource = Minecraft.getInstance().getResourceManager().getResource(location);
-            if (resource.isEmpty()) return fallback;
-            try (InputStream in = resource.get().open(); NativeImage image = NativeImage.read(in)) {
-                int[] size = new int[]{Math.max(1, image.getWidth()), Math.max(1, image.getHeight())};
-                TEXTURE_SIZES.put(location, size);
-                return size;
-            }
-        } catch (Exception ignored) {
-            return fallback;
-        }
+    @Override
+    public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        guiGraphics.fillGradient(0, 0, this.width, this.height, 0xE0101010, 0xE0101010);
+        // 铺当前这一页的纸：整张画布等比缩放居中，和阅读界面一模一样
+        PageCanvas.Layout layout = layout();
+        guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+        guiGraphics.blit(currentTexture(), layout.x(), layout.y(), layout.w(), layout.h(),
+                layout.u(), layout.v(), layout.uw(), layout.vh(), layout.texW(), layout.texH());
+        // 左侧栏的底：画在控件之前，否则会把输入框和按钮盖成灰的。
+        // 用接近不透明的黑，免得 HUD（快捷栏、进度提示）从底栏里透出来显得脏。
+        guiGraphics.fill(this.panelX - 4, this.panelTop, this.panelX + this.panelW + 4, this.panelBottom,
+                0xF0101010);
     }
 
     @Override
-    public void renderBackground(GuiGraphics p_294860_, int p_295019_, int p_294307_, float p_295562_) {
-        this.renderTransparentBackground(p_294860_);
-        p_294860_.blit(BookViewScreen.BOOK_LOCATION, (this.width - 192) / 2, 2, 0, 0, 192, 192);
+    public void removed() {
+        if (autosaveHidden) {
+            littlh.broken_chronicles.client.AutosaveIndicator.restore();
+            autosaveHidden = false;
+        }
+        super.removed();
     }
-
-    /** 产出类型按钮选中高亮：画一圈白色边框。 */
-    private void renderTypeSelected(GuiGraphics guiGraphics, Button button) {
-        int x = button.getX();
-        int y = button.getY();
-        int w = button.getWidth();
-        int h = button.getHeight();
-        guiGraphics.fill(x, y, x + w, y + 1, 0xFFFFFFFF);
-        guiGraphics.fill(x, y + h - 1, x + w, y + h, 0xFFFFFFFF);
-        guiGraphics.fill(x, y, x + 1, y + h, 0xFFFFFFFF);
-        guiGraphics.fill(x + w - 1, y, x + w, y + h, 0xFFFFFFFF);
-    }
-
-    private void renderCursor(GuiGraphics p_281833_, InkBookEditScreen.Pos2i p_282190_, boolean p_282412_) {
+    private void renderCursor(GuiGraphics guiGraphics, InkBookEditScreen.Pos2i pos, boolean atEnd) {
         if (this.frameTick / 6 % 2 == 0) {
-            p_282190_ = this.convertLocalToScreen(p_282190_);
-            if (!p_282412_) {
-                p_281833_.fill(p_282190_.x, p_282190_.y - 1, p_282190_.x + 1, p_282190_.y + 9, -16777216);
+            pos = this.convertLocalToScreen(pos);
+            if (!atEnd) {
+                guiGraphics.fill(pos.x, pos.y - 1, pos.x + 1, pos.y + 9, -16777216);
             } else {
-                p_281833_.drawString(this.font, "_", p_282190_.x, p_282190_.y, 0, false);
+                guiGraphics.drawString(this.font, "_", pos.x, pos.y, 0, false);
             }
         }
     }
 
-    private void renderHighlight(GuiGraphics p_282188_, Rect2i[] p_265482_) {
-        for (Rect2i rect2i : p_265482_) {
-            int i = rect2i.getX();
-            int j = rect2i.getY();
-            int k = i + rect2i.getWidth();
-            int l = j + rect2i.getHeight();
-            p_282188_.fill(RenderType.guiTextHighlight(), i, j, k, l, -16776961);
+    private void renderHighlight(GuiGraphics guiGraphics, Rect2i[] rects) {
+        for (Rect2i rect : rects) {
+            int i = rect.getX();
+            int j = rect.getY();
+            int k = i + rect.getWidth();
+            int l = j + rect.getHeight();
+            guiGraphics.fill(RenderType.guiTextHighlight(), i, j, k, l, -16776961);
         }
     }
 
-    private InkBookEditScreen.Pos2i convertScreenToLocal(InkBookEditScreen.Pos2i p_98115_) {
-        return new InkBookEditScreen.Pos2i(p_98115_.x - (this.width - 192) / 2 - 36, p_98115_.y - 32);
+    private InkBookEditScreen.Pos2i convertScreenToLocal(InkBookEditScreen.Pos2i pos) {
+        PageCanvas.TextArea area = textArea();
+        return new InkBookEditScreen.Pos2i(pos.x - area.x(), pos.y - area.y());
     }
 
-    private InkBookEditScreen.Pos2i convertLocalToScreen(InkBookEditScreen.Pos2i p_98146_) {
-        return new InkBookEditScreen.Pos2i(p_98146_.x + (this.width - 192) / 2 + 36, p_98146_.y + 32);
+    private InkBookEditScreen.Pos2i convertLocalToScreen(InkBookEditScreen.Pos2i pos) {
+        PageCanvas.TextArea area = textArea();
+        return new InkBookEditScreen.Pos2i(pos.x + area.x(), pos.y + area.y());
     }
 
     @Override
-    public boolean mouseClicked(double p_98088_, double p_98089_, int p_98090_) {
-        if (super.mouseClicked(p_98088_, p_98089_, p_98090_)) {
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // 输入框 / 按钮先拿；点到正文就定位光标
+        boolean widgetHit = super.mouseClicked(mouseX, mouseY, button);
+        // 只有标题 / 作者 / 描述这三个输入框能留住键盘焦点：点到别处（含正文、按钮）一律把键盘还给正文，
+        // 否则点过输入框之后，打字会一直灌进那个输入框，回不到正文
+        if (!(this.getFocused() instanceof EditBox)) {
+            this.setFocused(null);
+        }
+        if (widgetHit) {
             return true;
-        } else {
-            if (p_98090_ == 0) {
-                long i = Util.getMillis();
-                InkBookEditScreen.DisplayCache bookeditscreen$displaycache = this.getDisplayCache();
-                int j = bookeditscreen$displaycache.getIndexAtPosition(
-                    this.font, this.convertScreenToLocal(new InkBookEditScreen.Pos2i((int) p_98088_, (int) p_98089_))
-                );
-                if (j >= 0) {
-                    if (j != this.lastIndex || i - this.lastClickTime >= 250L) {
-                        this.pageEdit.setCursorPos(j, Screen.hasShiftDown());
-                    } else if (!this.pageEdit.isSelecting()) {
-                        this.selectWord(j);
-                    } else {
-                        this.pageEdit.selectAll();
-                    }
-                    this.clearDisplayCache();
+        }
+        if (button == 0) {
+            long now = Util.getMillis();
+            InkBookEditScreen.DisplayCache cache = this.getDisplayCache();
+            int index = cache.getIndexAtPosition(this.font,
+                    this.convertScreenToLocal(new InkBookEditScreen.Pos2i((int) mouseX, (int) mouseY)));
+            if (index >= 0) {
+                if (index != this.lastIndex || now - this.lastClickTime >= 250L) {
+                    this.pageEdit.setCursorPos(index, Screen.hasShiftDown());
+                } else if (!this.pageEdit.isSelecting()) {
+                    this.selectWord(index);
+                } else {
+                    this.pageEdit.selectAll();
                 }
-                this.lastIndex = j;
-                this.lastClickTime = i;
-            }
-            return true;
-        }
-    }
-
-    private void selectWord(int p_98142_) {
-        String s = this.getCurrentPageText();
-        this.pageEdit.setSelectionRange(StringSplitter.getWordPosition(s, -1, p_98142_, false), StringSplitter.getWordPosition(s, 1, p_98142_, false));
-    }
-
-    @Override
-    public boolean mouseDragged(double p_98092_, double p_98093_, int p_98094_, double p_98095_, double p_98096_) {
-        if (super.mouseDragged(p_98092_, p_98093_, p_98094_, p_98095_, p_98096_)) {
-            return true;
-        } else {
-            if (p_98094_ == 0) {
-                InkBookEditScreen.DisplayCache bookeditscreen$displaycache = this.getDisplayCache();
-                int i = bookeditscreen$displaycache.getIndexAtPosition(
-                    this.font, this.convertScreenToLocal(new InkBookEditScreen.Pos2i((int) p_98092_, (int) p_98093_))
-                );
-                this.pageEdit.setCursorPos(i, true);
                 this.clearDisplayCache();
             }
+            this.lastIndex = index;
+            this.lastClickTime = now;
+        }
+        return true;
+    }
+
+    private void selectWord(int index) {
+        String text = this.getCurrentPageText();
+        this.pageEdit.setSelectionRange(StringSplitter.getWordPosition(text, -1, index, false),
+                StringSplitter.getWordPosition(text, 1, index, false));
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (super.mouseDragged(mouseX, mouseY, button, dragX, dragY)) {
             return true;
         }
+        if (button == 0) {
+            InkBookEditScreen.DisplayCache cache = this.getDisplayCache();
+            int index = cache.getIndexAtPosition(this.font,
+                    this.convertScreenToLocal(new InkBookEditScreen.Pos2i((int) mouseX, (int) mouseY)));
+            this.pageEdit.setCursorPos(index, true);
+            this.clearDisplayCache();
+        }
+        return true;
     }
 
     private InkBookEditScreen.DisplayCache getDisplayCache() {
         if (this.displayCache == null) {
             this.displayCache = this.rebuildDisplayCache();
-            this.pageMsg = Component.translatable("book.pageIndicator", this.currentPage + 1, this.getNumPages());
         }
         return this.displayCache;
     }
@@ -656,86 +809,88 @@ public class InkBookEditScreen extends Screen {
     }
 
     private InkBookEditScreen.DisplayCache rebuildDisplayCache() {
-        String s = this.getCurrentPageText();
-        if (s.isEmpty()) {
+        String text = this.getCurrentPageText();
+        if (text.isEmpty()) {
             return InkBookEditScreen.DisplayCache.EMPTY;
-        } else {
-            int i = this.pageEdit.getCursorPos();
-            int j = this.pageEdit.getSelectionPos();
-            IntList intlist = new IntArrayList();
-            List<InkBookEditScreen.LineInfo> list = Lists.newArrayList();
-            MutableInt mutableint = new MutableInt();
-            MutableBoolean mutableboolean = new MutableBoolean();
-            StringSplitter stringsplitter = this.font.getSplitter();
-            stringsplitter.splitLines(s, 114, Style.EMPTY, true, (p_98132_, p_98133_, p_98134_) -> {
-                int k3 = mutableint.getAndIncrement();
-                String s2 = s.substring(p_98133_, p_98134_);
-                mutableboolean.setValue(s2.endsWith("\n"));
-                String s3 = StringUtils.stripEnd(s2, " \n");
-                int l3 = k3 * 9;
-                InkBookEditScreen.Pos2i bookeditscreen$pos2i1 = this.convertLocalToScreen(new InkBookEditScreen.Pos2i(0, l3));
-                intlist.add(p_98133_);
-                list.add(new InkBookEditScreen.LineInfo(p_98132_, s3, bookeditscreen$pos2i1.x, bookeditscreen$pos2i1.y));
-            });
-            int[] aint = intlist.toIntArray();
-            boolean flag = i == s.length();
-            InkBookEditScreen.Pos2i bookeditscreen$pos2i;
-            if (flag && mutableboolean.isTrue()) {
-                bookeditscreen$pos2i = new InkBookEditScreen.Pos2i(0, list.size() * 9);
-            } else {
-                int k = findLineFromPos(aint, i);
-                int l = this.font.width(s.substring(aint[k], i));
-                bookeditscreen$pos2i = new InkBookEditScreen.Pos2i(l, k * 9);
-            }
-            List<Rect2i> list1 = Lists.newArrayList();
-            if (i != j) {
-                int l2 = Math.min(i, j);
-                int i1 = Math.max(i, j);
-                int j1 = findLineFromPos(aint, l2);
-                int k1 = findLineFromPos(aint, i1);
-                if (j1 == k1) {
-                    int l1 = j1 * 9;
-                    int i2 = aint[j1];
-                    list1.add(this.createPartialLineSelection(s, stringsplitter, l2, i1, l1, i2));
-                } else {
-                    int i3 = j1 + 1 > aint.length ? s.length() : aint[j1 + 1];
-                    list1.add(this.createPartialLineSelection(s, stringsplitter, l2, i3, j1 * 9, aint[j1]));
-                    for (int j3 = j1 + 1; j3 < k1; j3++) {
-                        int j2 = j3 * 9;
-                        String s1 = s.substring(aint[j3], aint[j3 + 1]);
-                        int k2 = (int) stringsplitter.stringWidth(s1);
-                        list1.add(this.createSelection(new InkBookEditScreen.Pos2i(0, j2), new InkBookEditScreen.Pos2i(k2, j2 + 9)));
-                    }
-                    list1.add(this.createPartialLineSelection(s, stringsplitter, aint[k1], i1, k1 * 9, aint[k1]));
-                }
-            }
-            return new InkBookEditScreen.DisplayCache(
-                s, bookeditscreen$pos2i, flag, aint, list.toArray(new InkBookEditScreen.LineInfo[0]), list1.toArray(new Rect2i[0])
-            );
         }
+        int cursor = this.pageEdit.getCursorPos();
+        int selection = this.pageEdit.getSelectionPos();
+        IntList lineStarts = new IntArrayList();
+        List<InkBookEditScreen.LineInfo> lines = Lists.newArrayList();
+        MutableInt lineCounter = new MutableInt();
+        MutableBoolean endedWithNewline = new MutableBoolean();
+        StringSplitter splitter = this.font.getSplitter();
+        int wrapWidth = textArea().width();
+        splitter.splitLines(text, wrapWidth, Style.EMPTY, true, (style, start, end) -> {
+            int line = lineCounter.getAndIncrement();
+            String raw = text.substring(start, end);
+            endedWithNewline.setValue(raw.endsWith("\n"));
+            String stripped = StringUtils.stripEnd(raw, " \n");
+            InkBookEditScreen.Pos2i origin = this.convertLocalToScreen(
+                    new InkBookEditScreen.Pos2i(0, line * LINE_HEIGHT));
+            lineStarts.add(start);
+            lines.add(new InkBookEditScreen.LineInfo(style, stripped, origin.x, origin.y));
+        });
+        int[] starts = lineStarts.toIntArray();
+        boolean atEnd = cursor == text.length();
+        InkBookEditScreen.Pos2i cursorPos;
+        if (atEnd && endedWithNewline.isTrue()) {
+            cursorPos = new InkBookEditScreen.Pos2i(0, lines.size() * LINE_HEIGHT);
+        } else {
+            int line = findLineFromPos(starts, cursor);
+            int width = this.font.width(text.substring(starts[line], cursor));
+            cursorPos = new InkBookEditScreen.Pos2i(width, line * LINE_HEIGHT);
+        }
+        List<Rect2i> selections = Lists.newArrayList();
+        if (cursor != selection) {
+            int from = Math.min(cursor, selection);
+            int to = Math.max(cursor, selection);
+            int fromLine = findLineFromPos(starts, from);
+            int toLine = findLineFromPos(starts, to);
+            if (fromLine == toLine) {
+                selections.add(this.createPartialLineSelection(text, splitter, from, to,
+                        fromLine * LINE_HEIGHT, starts[fromLine]));
+            } else {
+                int fromEnd = fromLine + 1 > starts.length ? text.length() : starts[fromLine + 1];
+                selections.add(this.createPartialLineSelection(text, splitter, from, fromEnd,
+                        fromLine * LINE_HEIGHT, starts[fromLine]));
+                for (int line = fromLine + 1; line < toLine; line++) {
+                    int y = line * LINE_HEIGHT;
+                    String content = text.substring(starts[line], starts[line + 1]);
+                    int width = (int) splitter.stringWidth(content);
+                    selections.add(this.createSelection(new InkBookEditScreen.Pos2i(0, y),
+                            new InkBookEditScreen.Pos2i(width, y + LINE_HEIGHT)));
+                }
+                selections.add(this.createPartialLineSelection(text, splitter, starts[toLine], to,
+                        toLine * LINE_HEIGHT, starts[toLine]));
+            }
+        }
+        return new InkBookEditScreen.DisplayCache(text, cursorPos, atEnd, starts,
+                lines.toArray(new InkBookEditScreen.LineInfo[0]), selections.toArray(new Rect2i[0]));
     }
 
-    static int findLineFromPos(int[] p_98150_, int p_98151_) {
-        int i = Arrays.binarySearch(p_98150_, p_98151_);
+    static int findLineFromPos(int[] starts, int pos) {
+        int i = Arrays.binarySearch(starts, pos);
         return i < 0 ? -(i + 2) : i;
     }
 
-    private Rect2i createPartialLineSelection(String p_98120_, StringSplitter p_98121_, int p_98122_, int p_98123_, int p_98124_, int p_98125_) {
-        String s = p_98120_.substring(p_98125_, p_98122_);
-        String s1 = p_98120_.substring(p_98125_, p_98123_);
-        InkBookEditScreen.Pos2i bookeditscreen$pos2i = new InkBookEditScreen.Pos2i((int) p_98121_.stringWidth(s), p_98124_);
-        InkBookEditScreen.Pos2i bookeditscreen$pos2i1 = new InkBookEditScreen.Pos2i((int) p_98121_.stringWidth(s1), p_98124_ + 9);
-        return this.createSelection(bookeditscreen$pos2i, bookeditscreen$pos2i1);
+    private Rect2i createPartialLineSelection(String text, StringSplitter splitter, int from, int to,
+                                              int y, int lineStart) {
+        String a = text.substring(lineStart, from);
+        String b = text.substring(lineStart, to);
+        InkBookEditScreen.Pos2i p1 = new InkBookEditScreen.Pos2i((int) splitter.stringWidth(a), y);
+        InkBookEditScreen.Pos2i p2 = new InkBookEditScreen.Pos2i((int) splitter.stringWidth(b), y + LINE_HEIGHT);
+        return this.createSelection(p1, p2);
     }
 
-    private Rect2i createSelection(InkBookEditScreen.Pos2i p_98117_, InkBookEditScreen.Pos2i p_98118_) {
-        InkBookEditScreen.Pos2i bookeditscreen$pos2i = this.convertLocalToScreen(p_98117_);
-        InkBookEditScreen.Pos2i bookeditscreen$pos2i1 = this.convertLocalToScreen(p_98118_);
-        int i = Math.min(bookeditscreen$pos2i.x, bookeditscreen$pos2i1.x);
-        int j = Math.max(bookeditscreen$pos2i.x, bookeditscreen$pos2i1.x);
-        int k = Math.min(bookeditscreen$pos2i.y, bookeditscreen$pos2i1.y);
-        int l = Math.max(bookeditscreen$pos2i.y, bookeditscreen$pos2i1.y);
-        return new Rect2i(i, k, j - i, l - k);
+    private Rect2i createSelection(InkBookEditScreen.Pos2i a, InkBookEditScreen.Pos2i b) {
+        InkBookEditScreen.Pos2i screenA = this.convertLocalToScreen(a);
+        InkBookEditScreen.Pos2i screenB = this.convertLocalToScreen(b);
+        int x = Math.min(screenA.x, screenB.x);
+        int y = Math.min(screenA.y, screenB.y);
+        int right = Math.max(screenA.x, screenB.x);
+        int bottom = Math.max(screenA.y, screenB.y);
+        return new Rect2i(x, y, right - x, bottom - y);
     }
 
     @OnlyIn(Dist.CLIENT)
@@ -755,52 +910,47 @@ public class InkBookEditScreen extends Screen {
         final InkBookEditScreen.LineInfo[] lines;
         final Rect2i[] selection;
 
-        public DisplayCache(
-            String p_98201_, InkBookEditScreen.Pos2i p_98202_, boolean p_98203_, int[] p_98204_, InkBookEditScreen.LineInfo[] p_98205_, Rect2i[] p_98206_
-        ) {
-            this.fullText = p_98201_;
-            this.cursor = p_98202_;
-            this.cursorAtEnd = p_98203_;
-            this.lineStarts = p_98204_;
-            this.lines = p_98205_;
-            this.selection = p_98206_;
+        DisplayCache(String fullText, InkBookEditScreen.Pos2i cursor, boolean cursorAtEnd, int[] lineStarts,
+                     InkBookEditScreen.LineInfo[] lines, Rect2i[] selection) {
+            this.fullText = fullText;
+            this.cursor = cursor;
+            this.cursorAtEnd = cursorAtEnd;
+            this.lineStarts = lineStarts;
+            this.lines = lines;
+            this.selection = selection;
         }
 
-        public int getIndexAtPosition(Font p_98214_, InkBookEditScreen.Pos2i p_98215_) {
-            int i = p_98215_.y / 9;
-            if (i < 0) {
+        public int getIndexAtPosition(Font font, InkBookEditScreen.Pos2i pos) {
+            int line = pos.y / LINE_HEIGHT;
+            if (line < 0) {
                 return 0;
-            } else if (i >= this.lines.length) {
+            } else if (line >= this.lines.length) {
                 return this.fullText.length();
             } else {
-                InkBookEditScreen.LineInfo bookeditscreen$lineinfo = this.lines[i];
-                return this.lineStarts[i]
-                    + p_98214_.getSplitter().plainIndexAtWidth(bookeditscreen$lineinfo.contents, p_98215_.x, bookeditscreen$lineinfo.style);
+                InkBookEditScreen.LineInfo info = this.lines[line];
+                return this.lineStarts[line]
+                        + font.getSplitter().plainIndexAtWidth(info.contents, pos.x, info.style);
             }
         }
 
-        public int changeLine(int p_98211_, int p_98212_) {
-            int i = InkBookEditScreen.findLineFromPos(this.lineStarts, p_98211_);
-            int j = i + p_98212_;
-            int k;
-            if (0 <= j && j < this.lineStarts.length) {
-                int l = p_98211_ - this.lineStarts[i];
-                int i1 = this.lines[j].contents.length();
-                k = this.lineStarts[j] + Math.min(l, i1);
-            } else {
-                k = p_98211_;
+        public int changeLine(int pos, int delta) {
+            int line = InkBookEditScreen.findLineFromPos(this.lineStarts, pos);
+            int target = line + delta;
+            if (0 <= target && target < this.lineStarts.length) {
+                int column = pos - this.lineStarts[line];
+                int length = this.lines[target].contents.length();
+                return this.lineStarts[target] + Math.min(column, length);
             }
-            return k;
+            return pos;
         }
 
-        public int findLineStart(int p_98209_) {
-            int i = InkBookEditScreen.findLineFromPos(this.lineStarts, p_98209_);
-            return this.lineStarts[i];
+        public int findLineStart(int pos) {
+            return this.lineStarts[InkBookEditScreen.findLineFromPos(this.lineStarts, pos)];
         }
 
-        public int findLineEnd(int p_98219_) {
-            int i = InkBookEditScreen.findLineFromPos(this.lineStarts, p_98219_);
-            return this.lineStarts[i] + this.lines[i].contents.length();
+        public int findLineEnd(int pos) {
+            int line = InkBookEditScreen.findLineFromPos(this.lineStarts, pos);
+            return this.lineStarts[line] + this.lines[line].contents.length();
         }
     }
 
@@ -812,12 +962,12 @@ public class InkBookEditScreen extends Screen {
         final int x;
         final int y;
 
-        public LineInfo(Style p_98232_, String p_98233_, int p_98234_, int p_98235_) {
-            this.style = p_98232_;
-            this.contents = p_98233_;
-            this.x = p_98234_;
-            this.y = p_98235_;
-            this.asComponent = Component.literal(p_98233_).setStyle(p_98232_);
+        LineInfo(Style style, String contents, int x, int y) {
+            this.style = style;
+            this.contents = contents;
+            this.x = x;
+            this.y = y;
+            this.asComponent = Component.literal(contents).setStyle(style);
         }
     }
 
@@ -826,9 +976,9 @@ public class InkBookEditScreen extends Screen {
         public final int x;
         public final int y;
 
-        Pos2i(int p_98249_, int p_98250_) {
-            this.x = p_98249_;
-            this.y = p_98250_;
+        Pos2i(int x, int y) {
+            this.x = x;
+            this.y = y;
         }
     }
 }

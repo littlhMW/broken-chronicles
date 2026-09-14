@@ -9,7 +9,10 @@
   <li><b>Three record types</b> &mdash; <code>page</code> (single-sheet fragments), <code>book</code> (multi-page tomes), <code>tag</code> (text bound to an item; the item keeps working normally &mdash; you can still eat that apple or swing that sword).</li>
   <li><b>Read &amp; collect</b> &mdash; right-click to read, or press <b>N</b> while hovering an item in your inventory. Reading automatically unlocks the entry in your journal.</li>
   <li><b>Light-up entries</b> &mdash; revealable entries show as <code>???</code> until discovered; optionally auto-unlocked on login.</li>
-  <li><b>Writing ink</b> &mdash; craft <i>Lost Ink</i> (ink sac + glow ink sac + feather) and write your own pages, books, or item tags with a full multi-page editor (vanilla book &amp; quill UI).</li>
+  <li><b>Writing ink</b> &mdash; craft <i>Lost Ink</i> (glow ink sac + ink sac + feather) and write your own pages, books, or item tags with a full multi-page editor (vanilla book &amp; quill UI).</li>
+  <li><b>Lost Inscription</b> &mdash; a block made from chiseled stone bricks and Lost Ink. Carve words into it, read it with an empty hand, and sneak + right-click with any block to make it mimic that block's look.</li>
+  <li><b>Transcribing</b> &mdash; ink sac + paper + anything already written gives you a second, identical copy; the original stays with you.</li>
+  <li><b>Story chains</b> &mdash; entries can require other entries (<code>requires</code>), so a clue only appears after the fragment that hints at it. Loot injection respects the chain.</li>
   <li><b>Library</b> &mdash; inject entries into any loot table, so fragments and books appear in dungeons, villages, and more.</li>
   <li><b>Fully data-driven</b> &mdash; add entries via datapacks (<code>data/&lt;ns&gt;/shards/&lt;page|book|tag&gt;/&lt;id&gt;.json</code>), per-page textures, multi-language texts, markdown formatting, and item icons.</li>
   <li><b>Mod integration API</b> &mdash; use Broken Chronicles as a dependency and register your own entries from code (<code>ShardEntries.register(ShardEntry.builder(...))</code>).</li>
@@ -31,7 +34,14 @@
 <p>Put the jar into your <code>mods</code> folder. Requires the listed NeoForge version.</p>
 
 <h2>Content creation</h2>
-<p>See <code>docs/data-format.md</code> and <code>docs/api-integration.md</code> in the repository for entry formats, loot table injection, and the integration API.</p>
+<p>Everything is data-driven. The repository docs cover it:</p>
+<ul>
+  <li><code>docs/README.md</code> &mdash; documentation index, glossary and a 5-minute quick start</li>
+  <li><code>docs/data-format.md</code> &mdash; entry JSON format, multi-language texts, loot table injection, story chains, config</li>
+  <li><code>docs/api-integration.md</code> &mdash; using Broken Chronicles as a dependency (Java API, events, custom conditions and gates)</li>
+  <li><code>docs/textures.md</code> &mdash; page texture and UI layout spec (512&times;288 canvas, locked text box)</li>
+</ul>
+<p>Built-in guide fragments can be switched off (<code>enableBuiltinEntries</code> / <code>builtinLootEnabled</code> / <code>builtinLootChance</code>), and the writing editor is off by default (<code>writingEnabled</code>), so a pack ships only what it wants.</p>
 
 <h2>License</h2>
 <p>CC BY-NC 4.0 (Attribution-NonCommercial 4.0 International)</p>

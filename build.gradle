@@ -25,6 +25,49 @@ tasks.withType(JavaCompile).configureEach {
 java {
     toolchain.languageVersion = JavaLanguageVersion.of(21)
     withSourcesJar()
+    withJavadocJar()
+}
+
+// javadoc 只做"给别人看"的用途，文档格式问题不应该让构建失败
+tasks.withType(Javadoc).configureEach {
+    options.encoding = 'UTF-8'
+    options.addBooleanOption('Xdoclint:none', true)
+    failOnError = false
+}
+
+// 发布到 GitHub Packages，其他 MOD 可以直接以 maven 依赖引用本模组
+publishing {
+    publications {
+        register('mavenJava', MavenPublication) {
+            artifactId = project.archives_base_name
+            from components.java
+            pom {
+                name = project.mod_name
+                description = 'A data-driven library for fragmented narrative: collectible pages, tomes and item-bound text.'
+                url = 'https://github.com/littlhMW/broken-chronicles'
+                licenses {
+                    license {
+                        name = 'CC BY-NC 4.0'
+                        url = 'https://creativecommons.org/licenses/by-nc/4.0/'
+                    }
+                }
+                scm {
+                    url = 'https://github.com/littlhMW/broken-chronicles'
+                    connection = 'scm:git:https://github.com/littlhMW/broken-chronicles.git'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = 'GitHubPackages'
+            url = uri('https://maven.pkg.github.com/littlhMW/broken-chronicles')
+            credentials {
+                username = System.getenv('GITHUB_ACTOR') ?: project.findProperty('gpr.user')
+                password = System.getenv('GITHUB_TOKEN') ?: project.findProperty('gpr.token')
+            }
+        }
+    }
 }
 
 neoForge {
