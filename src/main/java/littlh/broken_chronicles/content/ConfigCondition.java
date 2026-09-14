@@ -19,7 +19,10 @@ import net.neoforged.neoforge.common.conditions.ICondition;
  * </ul>
  * 支持：allowCraftingModItems、writingEnabled、authorExportEnabled、autoCollectOnRead、
  * showUnknownEntries、showCollectionProgress、enableBuiltinEntries、builtinLootEnabled、
- * syncEntryContentToClients、allowSurvivalInscriptionMimic、enforceStoryChain、enforceGates。
+ * syncEntryContentToClients、allowSurvivalInscriptionMimic、enforceStoryChain、enforceGates，
+ * 以及阅读与物品功能开关：readingEnabled、readOnRightClick、readWhileHolding、readInContainerScreens、
+ * readTaggedItems、readVanillaBooks、readInscriptions、collectionBookEnabled、fragmentPageEnabled、
+ * shardBookEnabled、fragmentInkEnabled、lostInscriptionEnabled、transcribeEnabled。
  * <p>
  * 条件在数据包加载时求值一次，所以配置改动后要 /reload（游戏内「设置 → 模组设置」里改会自动重载一次）。
  */
@@ -56,6 +59,19 @@ public record ConfigCondition(String key, boolean expected) implements IConditio
                 case "allowSurvivalInscriptionMimic" -> ModConfig.ALLOW_SURVIVAL_INSCRIPTION_MIMIC.get();
                 case "enforceStoryChain" -> ModConfig.ENFORCE_STORY_CHAIN.get();
                 case "enforceGates" -> ModConfig.ENFORCE_GATES.get();
+                case "readingEnabled" -> ModConfig.READING_ENABLED.get();
+                case "readOnRightClick" -> ModConfig.READ_ON_RIGHT_CLICK.get();
+                case "readWhileHolding" -> ModConfig.READ_WHILE_HOLDING.get();
+                case "readInContainerScreens" -> ModConfig.READ_IN_CONTAINER_SCREENS.get();
+                case "readTaggedItems" -> ModConfig.READ_TAGGED_ITEMS.get();
+                case "readVanillaBooks" -> ModConfig.READ_VANILLA_BOOKS.get();
+                case "readInscriptions" -> ModConfig.READ_INSCRIPTIONS.get();
+                case "collectionBookEnabled" -> ModConfig.COLLECTION_BOOK_ENABLED.get();
+                case "fragmentPageEnabled" -> ModConfig.FRAGMENT_PAGE_ENABLED.get();
+                case "shardBookEnabled" -> ModConfig.SHARD_BOOK_ENABLED.get();
+                case "fragmentInkEnabled" -> ModConfig.FRAGMENT_INK_ENABLED.get();
+                case "lostInscriptionEnabled" -> ModConfig.LOST_INSCRIPTION_ENABLED.get();
+                case "transcribeEnabled" -> ModConfig.TRANSCRIBE_ENABLED.get();
                 default -> true;
             };
         } catch (Exception e) {

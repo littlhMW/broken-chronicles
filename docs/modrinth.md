@@ -72,9 +72,13 @@ ink and the inscription block.
 - **Multi-language by design.** Every title, body and page takes `{ "zh_cn": ..., "en_us": ... }`, and the translation
   override layer in `config/broken_chronicles/lang/<language>.json` can retranslate *any* entry — datapack, built-in or
   registered by another mod — without touching the original. `export-lang` / `import-lang` are the translator workflow.
-- **Everything is opt-in.** The writing editor, the built-in fragments, the loot injection and the mod's own crafting
-  recipes (ink, inscription, transcribing) each have a config switch, so a pack ships exactly what it wants. The
-  journal's own recipe is never disabled. 17 options, all commented.
+- **Everything is opt-in, down to a single reading path.** The writing editor, the built-in fragments, the loot injection
+  and the mod's own crafting recipes each have a config switch, and reading itself is split into seven (master switch,
+  right-click, read key while holding, read key inside container screens, inscribed items, written books & named paper,
+  inscriptions). Every item has its own switch too (chronicle, fragment, tome, ink, inscription, transcribe recipe), so a
+  pack can take away anything that does not fit its story. Switching something off is silent: the entry point simply
+  stops responding, with no chat or action-bar message. All of them are plain datapack conditions as well
+  (`{ "type": "broken_chronicles:config", "key": "fragmentPageEnabled" }`). 24 switches plus the rest, all commented.
 - **Overridable presentation.** UI strings are plain translation keys — including the two tab labels — and backgrounds
   are ordinary PNGs that any resource pack, or the drop-in `config/broken_chronicles/assets/` folder, can add.
 - **Dependency API.** `BrokenChroniclesApi` registers entries from code, exposes collect/read events, custom

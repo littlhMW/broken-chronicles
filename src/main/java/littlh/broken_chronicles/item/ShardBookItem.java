@@ -17,10 +17,23 @@ public class ShardBookItem extends Item {
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        // 开关关掉时右键当作没发生：不打开界面，也不给任何提示
+        if (!rightClickAllowed(level)) return InteractionResultHolder.pass(stack);
         if (level.isClientSide()) {
-            ClientUi.openReading(player.getItemInHand(hand));
+            ClientUi.openReading(stack);
         }
-        return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide());
+        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+    }
+
+    /** 「右键阅读」与「破碎残册」两个开关都得开着。 */
+    private static boolean rightClickAllowed(Level level) {
+        if (level.isClientSide()) {
+            return littlh.broken_chronicles.client.ClientCollectionState.readOnRightClick()
+                    && littlh.broken_chronicles.client.ClientCollectionState.shardBookEnabled();
+        }
+        return littlh.broken_chronicles.ModFeatures.rightClickRead()
+                && littlh.broken_chronicles.ModFeatures.shardBookEnabled();
     }
 
     /**

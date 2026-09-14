@@ -205,6 +205,8 @@ public class LostInscriptionBlock extends BaseEntityBlock {
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player,
                                                BlockHitResult hitResult) {
         if (!canReadWith(player)) return InteractionResult.PASS;
+        // 「阅读失传铭刻」或「失传铭刻」关掉时右键当作没发生（不给任何提示）
+        if (!readAllowed(level)) return InteractionResult.PASS;
         if (!(level.getBlockEntity(pos) instanceof LostInscriptionBlockEntity inscription)) {
             return InteractionResult.PASS;
         }
@@ -218,6 +220,16 @@ public class LostInscriptionBlock extends BaseEntityBlock {
         }
         ModPackets.sendOpenContent(serverPlayer, content);
         return InteractionResult.SUCCESS;
+    }
+
+    /** 「阅读失传铭刻」与「失传铭刻」两个开关都得开着；客户端按服务端同步下来的值判。 */
+    private static boolean readAllowed(Level level) {
+        if (level.isClientSide()) {
+            return littlh.broken_chronicles.client.ClientCollectionState.readInscriptions()
+                    && littlh.broken_chronicles.client.ClientCollectionState.lostInscriptionEnabled();
+        }
+        return ModConfig.READING_ENABLED.get() && ModConfig.READ_INSCRIPTIONS.get()
+                && littlh.broken_chronicles.ModFeatures.lostInscriptionEnabled();
     }
 
     /**

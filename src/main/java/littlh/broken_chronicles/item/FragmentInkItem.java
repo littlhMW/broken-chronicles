@@ -24,10 +24,20 @@ public class FragmentInkItem extends Item {
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
+        // 关掉「失传墨水」时右键当作没发生：不打开书写界面，也不给任何提示
+        if (!enabled(level)) return InteractionResultHolder.pass(stack);
         if (level.isClientSide()) {
             ClientUi.openInkWriting(player);
         }
-        return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide());
+        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
+    }
+
+    /** 「失传墨水」开关。 */
+    private static boolean enabled(Level level) {
+        return level.isClientSide()
+                ? littlh.broken_chronicles.client.ClientCollectionState.fragmentInkEnabled()
+                : littlh.broken_chronicles.ModFeatures.fragmentInkEnabled();
     }
 
     /** 物品说明（官方口吻的两行描述，见语言文件）。 */

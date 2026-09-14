@@ -513,6 +513,21 @@ ShardEntries.register(new ShardEntry(
 - `allowCraftingModItems`（默认 true）：是否允许合成本模组的物品（失传墨水、失传铭刻、抄写）。关掉后这三条配方会被整个移除，JEI / 配方书里也看不到；**不影响「破碎编年史」本体**（纸 + 羽毛 + 附魔书）的合成。这一项是通过数据包条件 `broken_chronicles:config` 求值的，所以改动后需要 `/reload`（在游戏内「设置 → 模组设置」里改会自动重载一次）
 - `enforceStoryChain`（默认 true）：故事链条总开关（条目 JSON 的 `requires`）
 - `enforceGates`（默认 true）：运行时门槛总开关（条目 JSON 的 `gates`）
+- 阅读开关（每一项都能单独关；关掉后对应入口完全没反应，也不会给玩家任何提示）：
+  - `readingEnabled`（默认 true）：阅读总开关，关掉后下面几项全部失效。「破碎编年史」本体不受影响，收集册照样能打开
+  - `readOnRightClick`（默认 true）：右键阅读残片 / 残册，以及成书与命名过的纸的右键收录
+  - `readWhileHolding`（默认 true）：没打开界面时按阅读键读主手 / 副手的物品
+  - `readInContainerScreens`（默认 true）：物品栏、箱子等容器界面里悬浮按阅读键
+  - `readTaggedItems`（默认 true）：阅读被打上文字的物品（`tag` 条目）
+  - `readVanillaBooks`（默认 true）：阅读原版成书与命名过的纸
+  - `readInscriptions`（默认 true）：空手右键失传铭刻方块读出上面的文字
+- 物品功能开关（关掉后这件物品从创造模式物品栏消失、功能失效、配方移除，残片 / 残册也不再进战利品表）：
+  - `collectionBookEnabled`（默认 true）：破碎编年史本体（右键打开收集册；关掉后它的合成配方也一并移除）
+  - `fragmentPageEnabled`（默认 true）：破碎残片
+  - `shardBookEnabled`（默认 true）：破碎残册
+  - `fragmentInkEnabled`（默认 true）：失传墨水
+  - `lostInscriptionEnabled`（默认 true）：失传铭刻
+  - `transcribeEnabled`（默认 true）：抄写配方
 - `pageWritingMaxPages`（默认 2，1~8）：书写界面里残页最多能写几页。只影响客户端界面
 - `tagWritingMaxPages`（默认 1，1~8）：给物品打铭刻时最多能写几页。只影响客户端界面
 
@@ -523,7 +538,7 @@ ShardEntries.register(new ShardEntry(
   `loot_tables` / `loot_weight`、`requires`、`gates`、`conditions`、`on_unlock`，tag 条目另有 `item`、`chance`、
   `entity` / `fishing` / `traded` / `crafted`。其中 `gates` 与 `conditions` 是「一行一条」的清单编辑器，
   写法见下面 5.1。
-- **模组设置**：模组本体的开关。服务端的项通过 `C2SConfigEdit` 请求服务端修改（需要 OP），
+- **模组设置**：模组本体的开关（阅读开关与物品功能开关都在这一页，悬停有说明）。服务端的项通过 `C2SConfigEdit` 请求服务端修改（需要 OP），
   只有客户端自己生效的项（残页 / 铭刻最大页数）直接写本地配置。
 
 ### 5.1 配置条件（`broken_chronicles:config`）

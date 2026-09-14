@@ -40,6 +40,8 @@ public final class ClientUi {
     }
 
     public static void openInkWriting(Player player) {
+        // 「失传墨水」关掉时入口整个不响应，也不给任何提示
+        if (!ClientCollectionState.fragmentInkEnabled()) return;
         // 编辑 UI 默认关闭：以服务端下发的开关为准，玩家只应该有阅读与收录。
         // 唯一例外是有权限（OP）的玩家：让他们能进去点「设置」把书写功能打开，否则会绕死。
         if (!ClientCollectionState.canOpenWriting()) {

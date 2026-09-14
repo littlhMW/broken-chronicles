@@ -106,6 +106,80 @@ public final class ModConfig {
                     "改动后需要重载数据包（/reload）或重启才生效，游戏内的开关会自动帮你重载一次。")
             .define("allowCraftingModItems", true);
 
+    // ==================== 阅读开关 ====================
+    // 只管"能不能把文字打开来看"，不管条目本身。关掉后对应入口完全没反应，也不会有任何提示。
+    // 多人游戏里以服务端下发的值为准（服务端把这几项一起同步给客户端）。
+
+    public static final ModConfigSpec.BooleanValue READING_ENABLED = BUILDER
+            .comment("阅读总开关。关掉后所有阅读入口（右键、N 键、背包悬浮、铭刻）全部不响应，也不会弹任何提示。",
+                    "「破碎编年史」本体不受影响：收集册照样能打开，已收录的条目照样能看。",
+                    "原版成书右键时原版自己会打开翻书界面，本模组只是不再收录它。")
+            .define("readingEnabled", true);
+
+    public static final ModConfigSpec.BooleanValue READ_ON_RIGHT_CLICK = BUILDER
+            .comment("右键阅读：手持破碎残片 / 破碎残册右键打开阅读界面。",
+                    "关掉后这两种物品右键不再打开阅读界面，原版成书与纸的右键行为回到原版。")
+            .define("readOnRightClick", true);
+
+    public static final ModConfigSpec.BooleanValue READ_WHILE_HOLDING = BUILDER
+            .comment("手持阅读：没有打开任何界面时，按阅读键（默认 N）读主手 / 副手的物品。")
+            .define("readWhileHolding", true);
+
+    public static final ModConfigSpec.BooleanValue READ_IN_CONTAINER_SCREENS = BUILDER
+            .comment("背包 / 容器界面阅读：开着物品栏、箱子、背包等界面时，鼠标悬浮在物品上按阅读键（默认 N）阅读。",
+                    "关掉后在这些界面里按阅读键没有任何反应。")
+            .define("readInContainerScreens", true);
+
+    public static final ModConfigSpec.BooleanValue READ_TAGGED_ITEMS = BUILDER
+            .comment("阅读带文字的物品：被打上文字的苹果、剑、方块……（条目类型 tag）。",
+                    "关掉后这些物品仍然带着文字与 tooltip，但按阅读键打不开阅读界面。")
+            .define("readTaggedItems", true);
+
+    public static final ModConfigSpec.BooleanValue READ_VANILLA_BOOKS = BUILDER
+            .comment("阅读原版成书与命名过的纸（阅读键 / 右键）。",
+                    "关掉后按阅读键不会打开它们，原版成书右键仍走原版自己的翻书界面，只是不再收录。")
+            .define("readVanillaBooks", true);
+
+    public static final ModConfigSpec.BooleanValue READ_INSCRIPTIONS = BUILDER
+            .comment("阅读失传铭刻方块：空手（或手持非方块）右键铭刻，读出上面的文字并收录。",
+                    "关掉后右键铭刻不会有反应。已经写好的铭刻内容不会丢。")
+            .define("readInscriptions", true);
+
+    // ==================== 物品功能开关 ====================
+    // 每件物品一个开关：关掉后这件物品不再出现在创造模式物品栏，它的功能（使用 / 放置 / 掉落 / 配方）
+    // 一并失效，就像它不存在一样。已经存在于存档里的物品不会消失，只是用不了。
+    // 「是否允许合成本模组物品」是这些开关之外的另一道总闸，两者同时开启才会出现配方。
+
+    public static final ModConfigSpec.BooleanValue COLLECTION_BOOK_ENABLED = BUILDER
+            .comment("「破碎编年史」本体：右键打开收集册。默认开启。",
+                    "关掉后右键不再打开收集册，物品栏里也不再显示；它的合成配方（纸 + 羽毛 + 附魔书）一起移除。")
+            .define("collectionBookEnabled", true);
+
+    public static final ModConfigSpec.BooleanValue FRAGMENT_PAGE_ENABLED = BUILDER
+            .comment("「破碎残片」：单页文字载体。默认开启。",
+                    "关掉后残片不能阅读、不能作为书写载体，也不再作为战利品掉落，物品栏里不再显示。")
+            .define("fragmentPageEnabled", true);
+
+    public static final ModConfigSpec.BooleanValue SHARD_BOOK_ENABLED = BUILDER
+            .comment("「破碎残册」：多页文字载体。默认开启。",
+                    "关掉后残册不能阅读、不能作为书写载体，也不再作为战利品掉落，物品栏里不再显示。")
+            .define("shardBookEnabled", true);
+
+    public static final ModConfigSpec.BooleanValue FRAGMENT_INK_ENABLED = BUILDER
+            .comment("「失传墨水」：主手拿墨水、副手持载体右键打开书写界面。默认开启。",
+                    "关掉后墨水右键没反应，合成配方一起移除，物品栏里不再显示。")
+            .define("fragmentInkEnabled", true);
+
+    public static final ModConfigSpec.BooleanValue LOST_INSCRIPTION_ENABLED = BUILDER
+            .comment("「失传铭刻」：可以放到地上、写字的方块。默认开启。",
+                    "关掉后铭刻物品不能放置，也不能用「方块 + 潜行右键」改变外观，合成配方一起移除，物品栏里不再显示。")
+            .define("lostInscriptionEnabled", true);
+
+    public static final ModConfigSpec.BooleanValue TRANSCRIBE_ENABLED = BUILDER
+            .comment("抄写配方（墨水 + 纸 + 写好的载体 → 复制一份文字）。默认开启。",
+                    "关掉后抄写配方被整个移除（JEI / 配方书里也看不到），已经抄出来的东西不受影响。")
+            .define("transcribeEnabled", true);
+
     public static final ModConfigSpec.IntValue PAGE_WRITING_MAX_PAGES = BUILDER
             .comment("书写界面里「残页」最多能写几页（1~8）。默认 2。",
                     "写出来的每一页都是一张独立的纸：阅读时用纸面下方的翻页键（或滚轮）左右翻，和残册一样。",

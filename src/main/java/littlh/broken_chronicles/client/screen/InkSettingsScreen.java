@@ -439,6 +439,34 @@ public class InkSettingsScreen extends Screen {
                 () -> toggle("enforceGates", this.mirror.enforceGates()));
         addServerRow("syncEntryContentToClients", this.mirror::syncEntryContent,
                 () -> toggle("syncEntryContentToClients", this.mirror.syncEntryContent()));
+        // 阅读开关：能不能把文字打开来看（总开关关掉时下面几项都跟着失效）
+        addServerRow("readingEnabled", this.mirror::readingEnabled,
+                () -> toggle("readingEnabled", this.mirror.readingEnabled()));
+        addServerRow("readOnRightClick", this.mirror::readOnRightClick,
+                () -> toggle("readOnRightClick", this.mirror.readOnRightClick()));
+        addServerRow("readWhileHolding", this.mirror::readWhileHolding,
+                () -> toggle("readWhileHolding", this.mirror.readWhileHolding()));
+        addServerRow("readInContainerScreens", this.mirror::readInContainerScreens,
+                () -> toggle("readInContainerScreens", this.mirror.readInContainerScreens()));
+        addServerRow("readTaggedItems", this.mirror::readTaggedItems,
+                () -> toggle("readTaggedItems", this.mirror.readTaggedItems()));
+        addServerRow("readVanillaBooks", this.mirror::readVanillaBooks,
+                () -> toggle("readVanillaBooks", this.mirror.readVanillaBooks()));
+        addServerRow("readInscriptions", this.mirror::readInscriptions,
+                () -> toggle("readInscriptions", this.mirror.readInscriptions()));
+        // 物品功能开关：一件物品一个，关掉后它从创造栏、配方、战利品表里一起消失
+        addServerRow("collectionBookEnabled", this.mirror::collectionBookEnabled,
+                () -> toggle("collectionBookEnabled", this.mirror.collectionBookEnabled()));
+        addServerRow("fragmentPageEnabled", this.mirror::fragmentPageEnabled,
+                () -> toggle("fragmentPageEnabled", this.mirror.fragmentPageEnabled()));
+        addServerRow("shardBookEnabled", this.mirror::shardBookEnabled,
+                () -> toggle("shardBookEnabled", this.mirror.shardBookEnabled()));
+        addServerRow("fragmentInkEnabled", this.mirror::fragmentInkEnabled,
+                () -> toggle("fragmentInkEnabled", this.mirror.fragmentInkEnabled()));
+        addServerRow("lostInscriptionEnabled", this.mirror::lostInscriptionEnabled,
+                () -> toggle("lostInscriptionEnabled", this.mirror.lostInscriptionEnabled()));
+        addServerRow("transcribeEnabled", this.mirror::transcribeEnabled,
+                () -> toggle("transcribeEnabled", this.mirror.transcribeEnabled()));
         rows.add(new Row(Component.translatable("broken_chronicles.gui.settings.pagePages"),
                 Component.translatable("broken_chronicles.gui.settings.pagePages.tip"),
                 () -> Component.literal(String.valueOf(ModConfig.PAGE_WRITING_MAX_PAGES.get())),

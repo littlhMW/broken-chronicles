@@ -138,6 +138,8 @@ public final class LootLibrary {
         Map<String, Integer> extraWeights = EXTRA.get(tableName);
         Map<String, Integer> builtinWeights = BUILTIN.get(tableName);
         for (ShardEntry candidate : ShardEntries.all()) {
+            // 载体物品被关掉的条目不再进战利品表（关掉残片 / 残册后箱子里就不会摸出它们）
+            if (!itemEnabled(candidate)) continue;
             String id = candidate.id().toString();
             boolean own = candidate.lootTables().contains(tableName);
             boolean extra = extraWeights != null && extraWeights.containsKey(id);
@@ -178,6 +180,15 @@ public final class LootLibrary {
             lines.add("  4) 其他模组用全局战利品修饰符 broken_chronicles:add_entry");
         }
         return lines;
+    }
+
+    /** 这条内容的载体物品还开着没有。残片 / 残册可以被单独关掉，其余类型不受影响。 */
+    private static boolean itemEnabled(ShardEntry entry) {
+        return switch (entry.type()) {
+            case PAGE -> littlh.broken_chronicles.ModFeatures.fragmentPageEnabled();
+            case BOOK -> littlh.broken_chronicles.ModFeatures.shardBookEnabled();
+            default -> true;
+        };
     }
 
     /** chance 小于 0 表示每格必掷（数据包/配置声明的条目）。 */

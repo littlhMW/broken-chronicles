@@ -150,6 +150,8 @@ public final class ModEvents {
         if (!(event.getEntity() instanceof ServerPlayer player)) return;
         ItemStack stack = event.getItemStack();
         if (!stack.is(Items.WRITTEN_BOOK)) return;
+        // 「阅读」或「阅读原版成书与纸」关掉时不再收录（原版自己的翻书界面照旧）
+        if (!littlh.broken_chronicles.ModFeatures.vanillaRead()) return;
         Optional<ResolvedContent> resolved = ShardContentResolver.resolve(stack, player.level().registryAccess());
         if (resolved.isEmpty()) return;
         littlh.broken_chronicles.api.BrokenChroniclesApi.fireRead(player, resolved.get().id(),
@@ -169,7 +171,15 @@ public final class ModEvents {
     public static void onRightClickPaper(PlayerInteractEvent.RightClickItem event) {
         ItemStack stack = event.getItemStack();
         if (!stack.is(Items.PAPER)) return;
-        if (event.getLevel().isClientSide()) {
+        boolean clientSide = event.getLevel().isClientSide();
+        // 「阅读」或「阅读原版成书与纸」关掉时右键当作没发生（不给任何提示）
+        boolean allowed = clientSide
+                ? littlh.broken_chronicles.client.ClientCollectionState.readVanillaBooks()
+                        && littlh.broken_chronicles.client.ClientCollectionState.readOnRightClick()
+                : littlh.broken_chronicles.ModFeatures.vanillaRead()
+                        && littlh.broken_chronicles.ModFeatures.rightClickRead();
+        if (!allowed) return;
+        if (clientSide) {
             littlh.broken_chronicles.client.ClientUi.openReading(stack);
             return;
         }
@@ -197,6 +207,8 @@ public final class ModEvents {
         Level level = event.getLevel();
         BlockState state = level.getBlockState(event.getPos());
         if (!(state.getBlock() instanceof LostInscriptionBlock)) return;
+        // 「失传铭刻」关掉时不给改外观
+        if (!littlh.broken_chronicles.ModFeatures.lostInscriptionEnabled()) return;
         ItemStack stack = event.getItemStack();
         if (!(stack.getItem() instanceof BlockItem blockItem)) return;
         Block block = blockItem.getBlock();

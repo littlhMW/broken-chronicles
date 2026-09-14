@@ -92,18 +92,23 @@ public final class ModPackets {
         ctx.enqueueWork(() -> {
             if (!ctx.flow().isServerbound()) return;
             if (!(ctx.player() instanceof ServerPlayer player)) return;
-            Optional<ResolvedContent> resolved = ShardContentResolver.resolve(payload.stack(), player.level().registryAccess());
+            ItemStack source = payload.stack();
+            Optional<ResolvedContent> resolved = ShardContentResolver.resolve(source, player.level().registryAccess());
             if (resolved.isEmpty()) {
                 // 兜底：客户端那份物品数据不全时（旧版本包 / 被别的模组改过物品栈），
                 // 用玩家自己手上那份再解析一次。
-                resolved = ShardContentResolver.resolve(player.getMainHandItem(), player.level().registryAccess());
+                source = player.getMainHandItem();
+                resolved = ShardContentResolver.resolve(source, player.level().registryAccess());
                 if (resolved.isEmpty()) {
-                    resolved = ShardContentResolver.resolve(player.getOffhandItem(), player.level().registryAccess());
+                    source = player.getOffhandItem();
+                    resolved = ShardContentResolver.resolve(source, player.level().registryAccess());
                 }
             }
             LOGGER.info("[破碎编年史] server received read packet, resolved={}, id={}",
                     resolved.isPresent(), resolved.map(r -> r.id()).orElse("-"));
             if (resolved.isEmpty()) return;
+            // 开关关掉时连收录也不做：客户端那边界面根本不会打开，这里只是别让改过的客户端钻空子
+            if (!readAllowed(source, resolved.get())) return;
             littlh.broken_chronicles.api.BrokenChroniclesApi.fireRead(player, resolved.get().id(),
                     resolved.get().type());
             if (ModConfig.AUTO_COLLECT_ON_READ.get() && !resolved.get().id().startsWith("blank:")) {
@@ -114,11 +119,38 @@ public final class ModPackets {
         });
     }
 
+    /**
+     * 这个物品上的内容允不允许读（服务端自己再判一次，规则和客户端 ClientHandler#canOpen 一致）。
+     * <p>
+     * 原版成书与纸看的是「阅读成书与纸」那一项，不跟着残片 / 残册的开关走。
+     */
+    private static boolean readAllowed(ItemStack stack, ResolvedContent content) {
+        if (stack.is(Items.PAPER) || stack.is(Items.WRITTEN_BOOK)) {
+            return littlh.broken_chronicles.ModFeatures.vanillaRead();
+        }
+        if (stack.is(ModItems.SHARD_BOOK.get())) {
+            return littlh.broken_chronicles.ModFeatures.readingEnabled()
+                    && littlh.broken_chronicles.ModFeatures.shardBookEnabled();
+        }
+        if (stack.is(ModItems.FRAGMENT_PAGE.get())) {
+            return littlh.broken_chronicles.ModFeatures.readingEnabled()
+                    && littlh.broken_chronicles.ModFeatures.fragmentPageEnabled();
+        }
+        return switch (content.type()) {
+            case TAG -> littlh.broken_chronicles.ModFeatures.taggedRead();
+            case BOOK -> littlh.broken_chronicles.ModFeatures.readingEnabled()
+                    && littlh.broken_chronicles.ModFeatures.shardBookEnabled();
+            case PAGE -> littlh.broken_chronicles.ModFeatures.readingEnabled()
+                    && littlh.broken_chronicles.ModFeatures.fragmentPageEnabled();
+        };
+    }
+
     private static void handleWrite(C2SShardWrite payload, IPayloadContext ctx) {
         ctx.enqueueWork(() -> {
             if (!ctx.flow().isServerbound()) return;
             if (!(ctx.player() instanceof ServerPlayer player)) return;
             if (!ModConfig.WRITING_ENABLED.get()) return;
+            if (!littlh.broken_chronicles.ModFeatures.fragmentInkEnabled()) return;
             if (!player.getMainHandItem().is(ModItems.FRAGMENT_INK.get())) return;
 
             String title = payload.title();
@@ -153,12 +185,16 @@ public final class ModPackets {
                     payload.mode(), title, pages.size(), off, ShardContentHelper.isSpecial(off));
             switch (payload.mode()) {
                 case "page" -> {
-                    if (!off.is(Items.PAPER) && !off.is(ModItems.FRAGMENT_PAGE.get()) && !off.is(Items.WRITABLE_BOOK)) return;
+                    if (!off.is(Items.PAPER) && !off.is(Items.WRITABLE_BOOK)
+                            && !(off.is(ModItems.FRAGMENT_PAGE.get())
+                            && littlh.broken_chronicles.ModFeatures.fragmentPageEnabled())) return;
                     off.shrink(1);
                     give(player, ShardContentHelper.make("page", title, description, author, pages, textures));
                 }
                 case "book" -> {
-                    if (!off.is(Items.WRITABLE_BOOK) && !off.is(ModItems.SHARD_BOOK.get())) return;
+                    if (!off.is(Items.WRITABLE_BOOK)
+                            && !(off.is(ModItems.SHARD_BOOK.get())
+                            && littlh.broken_chronicles.ModFeatures.shardBookEnabled())) return;
                     off.shrink(1);
                     give(player, ShardContentHelper.make("book", title, description, author, pages, textures));
                 }
@@ -207,7 +243,7 @@ public final class ModPackets {
                     ModConfig.SPEC.save();
                     LOGGER.info("[破碎编年史] {} 把配置 {} 改成 {}", player.getName().getString(), key, value);
                     // 配方是按数据包条件决定去留的：改完立刻重载一次，玩家不用自己敲 /reload
-                    if ("allowCraftingModItems".equals(key)) {
+                    if (RELOAD_KEYS.contains(key)) {
                         reloadDatapacks(player);
                     }
                 }
@@ -216,6 +252,11 @@ public final class ModPackets {
             CollectionData.refreshAll(player.server);
         });
     }
+
+    /** 改完要重载数据包的键：这些开关被配方 / 战利品表的数据包条件引用着。 */
+    private static final java.util.Set<String> RELOAD_KEYS = java.util.Set.of(
+            "allowCraftingModItems", "collectionBookEnabled", "fragmentInkEnabled",
+            "lostInscriptionEnabled", "transcribeEnabled");
 
     /** 只允许改这几个键，避免客户端乱写配置。 */
     private static boolean applyConfigEdit(String key, String value) {
@@ -236,6 +277,20 @@ public final class ModPackets {
             case "enforceStoryChain" -> ModConfig.ENFORCE_STORY_CHAIN.set(Boolean.parseBoolean(value));
             case "enforceGates" -> ModConfig.ENFORCE_GATES.set(Boolean.parseBoolean(value));
             case "syncEntryContentToClients" -> ModConfig.SYNC_ENTRY_CONTENT.set(Boolean.parseBoolean(value));
+            case "readingEnabled" -> ModConfig.READING_ENABLED.set(Boolean.parseBoolean(value));
+            case "readOnRightClick" -> ModConfig.READ_ON_RIGHT_CLICK.set(Boolean.parseBoolean(value));
+            case "readWhileHolding" -> ModConfig.READ_WHILE_HOLDING.set(Boolean.parseBoolean(value));
+            case "readInContainerScreens" -> ModConfig.READ_IN_CONTAINER_SCREENS.set(Boolean.parseBoolean(value));
+            case "readTaggedItems" -> ModConfig.READ_TAGGED_ITEMS.set(Boolean.parseBoolean(value));
+            case "readVanillaBooks" -> ModConfig.READ_VANILLA_BOOKS.set(Boolean.parseBoolean(value));
+            case "readInscriptions" -> ModConfig.READ_INSCRIPTIONS.set(Boolean.parseBoolean(value));
+            case "collectionBookEnabled" ->
+                    ModConfig.COLLECTION_BOOK_ENABLED.set(Boolean.parseBoolean(value));
+            case "fragmentPageEnabled" -> ModConfig.FRAGMENT_PAGE_ENABLED.set(Boolean.parseBoolean(value));
+            case "shardBookEnabled" -> ModConfig.SHARD_BOOK_ENABLED.set(Boolean.parseBoolean(value));
+            case "fragmentInkEnabled" -> ModConfig.FRAGMENT_INK_ENABLED.set(Boolean.parseBoolean(value));
+            case "lostInscriptionEnabled" -> ModConfig.LOST_INSCRIPTION_ENABLED.set(Boolean.parseBoolean(value));
+            case "transcribeEnabled" -> ModConfig.TRANSCRIBE_ENABLED.set(Boolean.parseBoolean(value));
             case "defaultTexture" -> {
                 List<String> textures = new ArrayList<>();
                 textures.add(value);

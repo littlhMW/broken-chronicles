@@ -1,6 +1,7 @@
 {
   "neoforge:conditions": [
-    { "type": "broken_chronicles:config", "key": "allowCraftingModItems" }
+    { "type": "broken_chronicles:config", "key": "allowCraftingModItems" },
+    { "type": "broken_chronicles:config", "key": "fragmentInkEnabled" }
   ],
   "type": "minecraft:crafting_shapeless",
   "category": "misc",

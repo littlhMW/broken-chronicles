@@ -684,6 +684,24 @@ public final class ExternalEntries {
                 allowCraftingModItems 默认 true。是否允许合成本模组的物品（失传墨水 / 失传铭刻 / 抄写）。
                                       关掉后这三条配方会被整个移除，不影响破碎编年史本体的合成。
                                       改动后需要 /reload（在游戏内的「设置 → 模组设置」里改会自动重载一次）。
+                阅读开关（每一项都能单独关；关掉后对应入口完全没反应，也不会给玩家任何提示）：
+                readingEnabled        默认 true。阅读总开关；关掉后下面几项全部失效。收集册本身不受影响，
+                                      已收录的条目照样能看。原版成书右键时原版自己仍会打开翻书界面，
+                                      只是不再收录。
+                readOnRightClick      默认 true。右键阅读残片 / 残册，以及成书与命名过的纸的右键收录。
+                readWhileHolding      默认 true。没打开界面时按阅读键（默认 N）读主手 / 副手的物品。
+                readInContainerScreens 默认 true。物品栏 / 箱子等容器界面里，悬浮在物品上按阅读键。
+                readTaggedItems       默认 true。阅读被打上文字的物品（tag）——苹果、剑、方块这些。
+                readVanillaBooks      默认 true。阅读原版成书与命名过的纸。
+                readInscriptions      默认 true。空手右键失传铭刻方块读出上面的文字。
+                物品功能开关（关掉后这件物品从创造模式物品栏消失、功能失效、配方移除，
+                残片 / 残册也不再进战利品表）：
+                collectionBookEnabled 默认 true。破碎编年史本体（右键打开收集册）；关掉后它的合成配方也移除。
+                fragmentPageEnabled   默认 true。破碎残片。
+                shardBookEnabled      默认 true。破碎残册。
+                fragmentInkEnabled    默认 true。失传墨水。
+                lostInscriptionEnabled 默认 true。失传铭刻（不能放置、不能改外观）。
+                transcribeEnabled     默认 true。抄写配方。
                 数据包也可以直接读这些开关：把 "neoforge:conditions": [ { "type": "broken_chronicles:config",
                 "key": "allowCraftingModItems" } ] 写进任意配方 / 战利品表 JSON，就能跟着本模组的配置一起开关。
                 书写：主手失传墨水，副手拿纸（写 page）/ 书与笔（写 book）/ 任意物品（打 tag），右键墨水。
@@ -701,7 +719,7 @@ public final class ExternalEntries {
                     战利品表与权重、前置条目（故事链条）、运行时门槛（gates）、加载条件（conditions）、
                     收录钩子（on_unlock）；tag 另有绑定物品、生成概率与生成来源（生物/钓鱼/交易/合成）。
                     这些属性会原样写进导出的条目 JSON，改完记得导出。
-                  · 模组设置：上面这些书写相关的配置（服务端的项需要 OP）。
+                  · 模组设置：上面这些开关（书写、阅读、物品功能都在这一页，鼠标悬浮有说明）。服务端的项需要 OP。
 
                 收集册与指令
                 -------------------------
@@ -959,6 +977,29 @@ public final class ExternalEntries {
                                       lost inscription, transcribing). Turning it off removes those three
                                       recipes entirely; the Chronicle recipe is never affected. Needs a
                                       /reload to apply (the in-game Mod Settings toggle reloads for you).
+                Reading switches (each one is independent; turning one off is silent - the entry point
+                simply stops responding and the player gets no message at all):
+                readingEnabled        Default true. Master switch; off disables every row below. The
+                                      chronicle itself still opens and collected entries stay readable.
+                                      A written book still opens the vanilla screen, it is just not collected.
+                readOnRightClick      Default true. Right-click a fragment / tome to read it, and the
+                                      right-click collection of written books and named paper.
+                readWhileHolding      Default true. Press the read key (N by default) with no screen open
+                                      to read the item in your main / off hand.
+                readInContainerScreens Default true. Hover an item inside the inventory or a container
+                                      (chest, backpack...) and press the read key.
+                readTaggedItems       Default true. Read inscribed items (tag entries): apples, swords,
+                                      blocks.
+                readVanillaBooks      Default true. Read written books and named paper.
+                readInscriptions      Default true. Right-click a Lost Inscription block with an empty hand.
+                Item switches (off means the item leaves the creative tab, stops working, loses its
+                recipe, and fragments / tomes stop being injected into loot tables):
+                collectionBookEnabled Default true. The Broken Chronicle itself; its recipe is removed too.
+                fragmentPageEnabled   Default true. Broken Fragment.
+                shardBookEnabled      Default true. Broken Tome.
+                fragmentInkEnabled    Default true. Lost Ink.
+                lostInscriptionEnabled Default true. Lost Inscription (cannot be placed or re-skinned).
+                transcribeEnabled     Default true. The transcribe recipe.
                 Datapacks can read these switches directly: put "neoforge:conditions":
                 [ { "type": "broken_chronicles:config", "key": "allowCraftingModItems" } ] into any recipe
                 or loot table JSON to follow this mod's config.
@@ -981,7 +1022,8 @@ public final class ExternalEntries {
                     required entries (story chain), runtime gates, load conditions and on-collect hooks;
                     tag entries also get bound item, spawn chance and source filters (mob / fishing /
                     trade / crafting). These fields are written verbatim into the exported entry JSON.
-                  - Mod Settings: the mod's own switches (server options need OP), including
+                  - Mod Settings: the mod's own switches (writing, reading and per-item switches
+                    all on this tab, with a tooltip for each row; server options need OP), including
                     allowCraftingModItems, which removes the ink / inscription / transcribe recipes.
 
                 Collection book & commands

@@ -72,6 +72,18 @@ the mod version.
 - 阅读画布统一 512×288（16:9），按非透明区域裁剪缩放；新增 9 张纸质背景（旧纸 / 旧书 / 血迹变体）与格式范例图。
 - 物品与方块图标、编年史书皮。
 
+### 新增 · 设置开关
+
+- 阅读拆成 7 个独立开关：`readingEnabled`（总开关）、`readOnRightClick`（右键）、`readWhileHolding`（手持按阅读键）、
+  `readInContainerScreens`（物品栏 / 容器界面里悬浮按阅读键）、`readTaggedItems`（带文字的物品）、
+  `readVanillaBooks`（原版成书与命名过的纸）、`readInscriptions`（失传铭刻）。
+- 每件物品一个功能开关：`collectionBookEnabled`、`fragmentPageEnabled`、`shardBookEnabled`、`fragmentInkEnabled`、
+  `lostInscriptionEnabled`、`transcribeEnabled`。关掉后该物品从创造模式物品栏消失、功能失效、配方移除，
+  残片 / 残册也不再注入战利品表。
+- 全部开关都在书写界面的「设置 → 模组设置」页里（每行悬浮有说明；服务端的项需要 OP），也能被数据包条件引用：
+  `{ "type": "broken_chronicles:config", "key": "fragmentPageEnabled" }`。
+- 关掉任何开关都不会给玩家任何提示：入口直接当作没发生，聊天栏与动作栏都不出现文字。
+
 ### 变更
 
 - 协议改为 **CC BY-NC 4.0**（署名—非商业性使用 4.0 国际）。
@@ -170,6 +182,15 @@ the mod version.
 
 **Textures** — 9 paper backgrounds (old paper / old book / blood variants) plus a layout template, all on the
 512×288 canvas; item, block and chronicle-cover art.
+
+**Switches** — reading is split into seven independent switches (`readingEnabled`, `readOnRightClick`,
+`readWhileHolding`, `readInContainerScreens`, `readTaggedItems`, `readVanillaBooks`, `readInscriptions`) and every item
+has its own (`collectionBookEnabled`, `fragmentPageEnabled`, `shardBookEnabled`, `fragmentInkEnabled`,
+`lostInscriptionEnabled`, `transcribeEnabled`); switching an item off removes it from the creative tab, disables it,
+drops its recipe and stops it being injected into loot tables. All of them sit in the writing screen's
+Settings -> Mod Settings tab (tooltip per row; server rows need OP), can be used as datapack conditions
+(`{ "type": "broken_chronicles:config", "key": "fragmentPageEnabled" }`), and are silent: the entry point simply
+stops responding with no chat or action-bar message.
 
 **Changed** — license is now CC BY-NC 4.0; chronicle tabs are "Chronicle / Books & Paper" and every UI string is
 overridable; narrator is a search keyword instead of a filter; revealable entries, the writing editor, the collected

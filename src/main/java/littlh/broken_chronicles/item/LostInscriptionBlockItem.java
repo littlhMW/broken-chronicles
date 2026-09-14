@@ -6,11 +6,14 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 
@@ -21,6 +24,21 @@ import java.util.List;
 public class LostInscriptionBlockItem extends BlockItem {
     public LostInscriptionBlockItem(Block block, Item.Properties properties) {
         super(block, properties);
+    }
+
+    /** 关掉「失传铭刻」时不能放置：对着方块右键当作没发生（不给任何提示）。 */
+    @Override
+    public InteractionResult useOn(UseOnContext context) {
+        Level level = context.getLevel();
+        if (!enabled(level)) return InteractionResult.PASS;
+        return super.useOn(context);
+    }
+
+    /** 「失传铭刻」开关。 */
+    private static boolean enabled(Level level) {
+        return level.isClientSide()
+                ? littlh.broken_chronicles.client.ClientCollectionState.lostInscriptionEnabled()
+                : littlh.broken_chronicles.ModFeatures.lostInscriptionEnabled();
     }
 
     @Override

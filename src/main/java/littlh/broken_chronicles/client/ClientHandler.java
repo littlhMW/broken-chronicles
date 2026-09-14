@@ -63,6 +63,8 @@ public final class ClientHandler {
         if (event.getKeyCode() != ModKeyMappings.READ.getKey().getValue()) return;
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.screen == null) return;
+        // 「背包 / 容器界面阅读」关掉时，在这个界面里按阅读键当作没发生
+        if (!ClientCollectionState.readInContainerScreens()) return;
         if (mc.screen instanceof AbstractContainerScreen<?> screen) {
             Slot slot = screen.getSlotUnderMouse();
             if (slot != null && slot.hasItem()) {
@@ -120,7 +122,8 @@ public final class ClientHandler {
             if (mc.player == null) return;
 
             if (mc.screen != null) {
-                if (mc.screen instanceof AbstractContainerScreen<?> screen) {
+                if (mc.screen instanceof AbstractContainerScreen<?> screen
+                        && ClientCollectionState.readInContainerScreens()) {
                     Slot slot = screen.getSlotUnderMouse();
                     if (slot != null && slot.hasItem()) {
                         ItemStack stack = slot.getItem();
@@ -131,6 +134,7 @@ public final class ClientHandler {
                 return;
             }
 
+            if (!ClientCollectionState.readWhileHolding()) return;
             ItemStack main = mc.player.getMainHandItem();
             LOGGER.debug("[破碎编年史] main hand {}", main);
             if (!main.isEmpty()) {
@@ -163,6 +167,7 @@ public final class ClientHandler {
         if (stack.is(Items.WRITTEN_BOOK)) {
             // 原版成书一律直接调用原版看书 UI（就算它绑定了注册表 book 条目也一样），
             // 模组这边只负责把它收录进编年史。
+            if (!ClientCollectionState.readVanillaBooks()) return;
             BookViewScreen.BookAccess access = BookViewScreen.BookAccess.fromItem(stack);
             if (access != null) {
                 PacketDistributor.sendToServer(new C2SShardRead(stack.copy()));
@@ -173,9 +178,31 @@ public final class ClientHandler {
         Optional<ResolvedContent> resolved = ShardContentResolver.resolve(stack, level.registryAccess());
         LOGGER.debug("[破碎编年史] openByStack stack={} resolved={} id={}", stack, resolved.isPresent(),
                 resolved.map(r -> r.id()).orElse("-"));
-        if (resolved.isPresent()) {
+        if (resolved.isPresent() && canOpen(stack, resolved.get())) {
             mc.setScreen(new ReadingScreen(stack.copy(), resolved.get(), returnScreen));
         }
+    }
+
+    /**
+     * 这个物品上的内容允不允许打开：按"是哪件物品 / 哪类内容"分别受配置开关控制。
+     * <p>
+     * 关掉时直接不开界面，也不给任何提示。
+     */
+    private static boolean canOpen(ItemStack stack, ResolvedContent content) {
+        if (stack.is(Items.PAPER) || stack.is(Items.WRITTEN_BOOK)) {
+            return ClientCollectionState.readVanillaBooks();
+        }
+        if (stack.is(littlh.broken_chronicles.ModItems.SHARD_BOOK.get())) {
+            return ClientCollectionState.shardBookEnabled();
+        }
+        if (stack.is(littlh.broken_chronicles.ModItems.FRAGMENT_PAGE.get())) {
+            return ClientCollectionState.fragmentPageEnabled();
+        }
+        return switch (content.type()) {
+            case TAG -> ClientCollectionState.readTaggedItems();
+            case BOOK -> ClientCollectionState.shardBookEnabled();
+            case PAGE -> ClientCollectionState.fragmentPageEnabled();
+        };
     }
 
 }

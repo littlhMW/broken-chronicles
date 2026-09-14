@@ -59,6 +59,57 @@ public final class ClientCollectionState {
         return settings.writingEnabled() || canEdit;
     }
 
+    // ==================== 阅读 / 物品功能开关 ====================
+    // 这些都是服务端下发的值（单人游戏里就是自己那份配置）；关掉时入口直接不响应，也不发任何提示。
+
+    public static boolean readOnRightClick() {
+        return settings.readOnRightClick();
+    }
+
+    public static boolean readWhileHolding() {
+        return settings.readWhileHolding();
+    }
+
+    public static boolean readInContainerScreens() {
+        return settings.readInContainerScreens();
+    }
+
+    public static boolean readTaggedItems() {
+        return settings.readTaggedItems();
+    }
+
+    public static boolean readVanillaBooks() {
+        return settings.readVanillaBooks();
+    }
+
+    public static boolean readInscriptions() {
+        return settings.readInscriptions();
+    }
+
+    public static boolean collectionBookEnabled() {
+        return settings.collectionBookEnabled();
+    }
+
+    public static boolean fragmentPageEnabled() {
+        return settings.fragmentPageEnabled();
+    }
+
+    public static boolean shardBookEnabled() {
+        return settings.shardBookEnabled();
+    }
+
+    public static boolean fragmentInkEnabled() {
+        return settings.fragmentInkEnabled();
+    }
+
+    public static boolean lostInscriptionEnabled() {
+        return settings.lostInscriptionEnabled();
+    }
+
+    public static boolean transcribeEnabled() {
+        return settings.transcribeEnabled();
+    }
+
     public static void apply(S2CCollectionData data) {
         Set<String> before = new HashSet<>(UNLOCKED);
         UNLOCKED.clear();

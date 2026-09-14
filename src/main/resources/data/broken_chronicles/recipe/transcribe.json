@@ -1,6 +1,7 @@
 {
   "neoforge:conditions": [
-    { "type": "broken_chronicles:config", "key": "allowCraftingModItems" }
+    { "type": "broken_chronicles:config", "key": "allowCraftingModItems" },
+    { "type": "broken_chronicles:config", "key": "transcribeEnabled" }
   ],
   "type": "broken_chronicles:crafting_special_transcribe",
   "category": "misc"
