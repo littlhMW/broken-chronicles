@@ -117,6 +117,9 @@ the mod version.
 - 铭刻拟态成方块后材质全黑、无法阅读、接触面透明、丢失发光效果。
 - 收录后正文重复显示；西方语言下物品自身文本不显示；文案换行等 markdown 未生效。
 - 书名号等长文本在 UI 上溢出、标题与正文重叠。
+- 背景材质加载失败时不再画成紫黑格子：挑背景会跳过画不出来的材质、退回别的纸，一张都画不出来就只留深色底
+  （日志里留一行警告）；书写界面的背景待选列表也不再列出坏材质。材质文件损坏、或 **mod jar 在游戏运行时被覆盖 / 截断**
+  （构建后同步到测试实例的时候最容易发生）都会触发这种情况——重启游戏或按 `F3+T` 重新加载资源包即可恢复。
 
 ---
 
@@ -216,4 +219,9 @@ item as the row icon (plain paper is neither readable nor collected); item and U
 **Fixed** — `N` while hovering items in container screens; a two-page fragment showing only one page; `Esc` quitting
 to the game from an entry; random background per opening; editor overflow, overlapping widgets and focus getting stuck
 in the header fields; inscriptions rendering black / unreadable / transparent after mimicking a block; duplicated body
-text; missing item text in English; markdown and line breaks; long titles overflowing.
+text; missing item text in English; markdown and line breaks; long titles overflowing; a background texture that fails to
+load is no longer painted as the magenta/black missing-texture checkerboard — background picking skips textures the
+texture manager rejected, falls back to another sheet, and if none can be drawn the screen keeps its dark backdrop (one
+warning in the log), and the writing screen's background list no longer offers broken textures. Damaged images and a mod
+jar that was overwritten / truncated while the game was running (easy to hit when a build syncs into the test instance
+mid-session) both trigger this; restarting or pressing `F3+T` clears it.

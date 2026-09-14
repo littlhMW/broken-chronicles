@@ -392,8 +392,11 @@ public class ReadingScreen extends Screen {
         ResourceLocation tex = currentTexture();
         PageCanvas.Layout layout = computeLayout(tex);
         guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-        guiGraphics.blit(tex, layout.x(), layout.y(), layout.w(), layout.h(),
-                layout.u(), layout.v(), layout.uw(), layout.vh(), layout.texW(), layout.texH());
+        // 连兜底纸都画不出来（坏材质）就不画，留深色底 + 浅色字，总好过一屏紫黑格子
+        if (PageCanvas.loads(tex)) {
+            guiGraphics.blit(tex, layout.x(), layout.y(), layout.w(), layout.h(),
+                    layout.u(), layout.v(), layout.uw(), layout.vh(), layout.texW(), layout.texH());
+        }
         positionButtons(layout);
 
         int cx = layout.contentX();
@@ -669,9 +672,12 @@ public class ReadingScreen extends Screen {
         return PageCanvas.defaultTexture();
     }
 
-    /** 材质文件是否存在（资源包里找不到时返回 false，避免渲染成紫黑方块）。 */
+    /**
+     * 材质能不能真的画出来（文件在，而且没被贴图管理器换成紫黑方块）。
+     * 加载失败时退回默认纸张，而不是把整屏画成紫黑格子。
+     */
     private static boolean textureExists(ResourceLocation location) {
-        return PageCanvas.exists(location);
+        return PageCanvas.loads(location);
     }
 
     /** 玩家实际绑定的阅读键显示名（默认 N，改键后显示新键）。 */

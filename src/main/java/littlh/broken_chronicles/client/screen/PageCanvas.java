@@ -4,6 +4,8 @@ import com.mojang.blaze3d.platform.NativeImage;
 import littlh.broken_chronicles.ModConfig;
 import littlh.broken_chronicles.ModMindEntry;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.texture.AbstractTexture;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.Resource;
 import net.neoforged.api.distmarker.Dist;
@@ -11,8 +13,10 @@ import net.neoforged.api.distmarker.OnlyIn;
 
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * 纸张画布的几何：阅读界面和书写界面共用同一套排版，两边看到的位置、字号、换行完全一致。
@@ -43,13 +47,17 @@ public final class PageCanvas {
 
     /** 材质路径 -> {texW, texH, minX, minY, maxX, maxY} 非透明区域。 */
     private static final Map<ResourceLocation, int[]> TEXTURE_BOUNDS = new HashMap<>();
+    /** 已经警告过的坏材质，免得每帧刷日志。 */
+    private static final Set<ResourceLocation> REPORTED_BROKEN = new HashSet<>();
+    private static final org.slf4j.Logger LOGGER = com.mojang.logging.LogUtils.getLogger();
 
     private PageCanvas() {
     }
 
-    /** 资源包重载后清空材质边界缓存（F3+T、切换资源包后重新计算）。 */
+    /** 资源包重载后清空材质缓存（F3+T、切换资源包后重新计算；加载失败的也再试一次）。 */
     public static void invalidate() {
         TEXTURE_BOUNDS.clear();
+        REPORTED_BROKEN.clear();
     }
 
     /** 材质文件是否存在（资源包里找不到时返回 false，避免渲染成紫黑方块）。 */
@@ -58,12 +66,34 @@ public final class PageCanvas {
         return Minecraft.getInstance().getResourceManager().getResource(location).isPresent();
     }
 
-    /** 兜底材质：配置里第一个存在的默认材质，都没有就用内置 oldpaper。 */
+    /**
+     * 材质能不能真的画出来。
+     * <p>
+     * 文件在资源包里还不够：贴图可能加载失败（图片损坏、jar 被覆盖 / 截断、资源包不完整），
+     * 这时 {@code TextureManager} 会把它悄悄换成紫黑格子。挑背景一律走这个方法，挑不到就退回别的纸，
+     * 而不是把整屏画成紫黑方块。资源包重载后会重新判定一次（见 {@link #invalidate()}）。
+     */
+    public static boolean loads(ResourceLocation location) {
+        if (!exists(location)) return false;
+        try {
+            AbstractTexture texture = Minecraft.getInstance().getTextureManager().getTexture(location);
+            boolean ok = texture != MissingTextureAtlasSprite.getTexture();
+            if (!ok && REPORTED_BROKEN.add(location)) {
+                LOGGER.warn("[破碎编年史] 材质 {} 加载失败（文件损坏或资源包不完整），这一屏改用别的背景。"
+                        + "重新加载资源包（F3+T）或重启游戏后可再试。", location);
+            }
+            return ok;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** 兜底材质：配置里第一个能画出来的默认材质，都没有就用内置 oldpaper。 */
     public static ResourceLocation defaultTexture() {
         for (String def : ModConfig.DEFAULT_PAGE_TEXTURES.get()) {
             try {
                 ResourceLocation t = ResourceLocation.parse(def);
-                if (exists(t)) return t;
+                if (loads(t)) return t;
             } catch (Exception ignored) {
             }
         }

@@ -565,8 +565,10 @@ public class CollectionScreen extends Screen {
     @Override
     public void renderBackground(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         guiGraphics.fillGradient(0, 0, this.width, this.height, 0xE0101010, 0xE0101010);
-        // 书皮画在控件之前，否则会把搜索框和筛选按钮盖住
+        // 书皮画在控件之前，否则会把搜索框和筛选按钮盖住；材质画不出来就不画，免得整屏紫黑格子
         guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-        guiGraphics.blit(BACKGROUND, bgX(), bgY(), 0, 0, BG_SIZE, BG_SIZE, 256, 256);
+        if (PageCanvas.loads(BACKGROUND)) {
+            guiGraphics.blit(BACKGROUND, bgX(), bgY(), 0, 0, BG_SIZE, BG_SIZE, 256, 256);
+        }
     }
 }

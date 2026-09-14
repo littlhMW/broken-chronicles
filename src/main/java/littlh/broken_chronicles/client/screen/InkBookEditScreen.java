@@ -155,11 +155,11 @@ public class InkBookEditScreen extends Screen {
         };
     }
 
-    /** 当前页铺哪张纸：没选就是配置里的默认材质。 */
+    /** 当前页铺哪张纸：没选就是配置里的默认材质。挑不出能画的就用默认那张。 */
     private ResourceLocation currentTexture() {
         ResourceLocation selected = this.selectedTextures.size() > textureIndex()
                 ? this.selectedTextures.get(textureIndex()) : null;
-        if (selected != null && PageCanvas.exists(selected)) return selected;
+        if (selected != null && PageCanvas.loads(selected)) return selected;
         return PageCanvas.defaultTexture();
     }
 
@@ -401,6 +401,8 @@ public class InkBookEditScreen extends Screen {
                 String path = rl.getPath();
                 if (path.endsWith("scrap.png") || path.endsWith("diary.png") || path.endsWith("leaf.png")) continue;
                 if (path.endsWith("reading_template.png") || path.endsWith("template.png")) continue;
+                // 画不出来的（图片损坏 / 资源包被覆盖过）不进待选列表：换背景时不会换出一屏紫黑格子
+                if (!PageCanvas.loads(rl)) continue;
                 this.availableTextures.add(rl);
             }
         } catch (Exception ignored) {
@@ -676,8 +678,10 @@ public class InkBookEditScreen extends Screen {
         int h = Math.max(1, (int) Math.round(texH * scale));
         guiGraphics.fill(this.panelX - 1, this.previewY - 1, this.panelX + this.previewW + 1,
                 this.previewY + this.previewH + 1, 0x80000000);
-        guiGraphics.blit(tex, this.panelX + (this.previewW - w) / 2, this.previewY + (this.previewH - h) / 2,
-                w, h, 0, 0, texW, texH, texW, texH);
+        if (PageCanvas.loads(tex)) {
+            guiGraphics.blit(tex, this.panelX + (this.previewW - w) / 2, this.previewY + (this.previewH - h) / 2,
+                    w, h, 0, 0, texW, texH, texW, texH);
+        }
         String path = tex.getPath();
         String name = path.substring(path.lastIndexOf('/') + 1);
         guiGraphics.drawString(this.font, this.font.plainSubstrByWidth(name, Math.max(20, this.panelW)),
@@ -691,8 +695,12 @@ public class InkBookEditScreen extends Screen {
         // 铺当前这一页的纸：整张画布等比缩放居中，和阅读界面一模一样
         PageCanvas.Layout layout = layout();
         guiGraphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
-        guiGraphics.blit(currentTexture(), layout.x(), layout.y(), layout.w(), layout.h(),
-                layout.u(), layout.v(), layout.uw(), layout.vh(), layout.texW(), layout.texH());
+        // 纸画不出来（坏材质）时干脆不画：留深色底 + 浅色字，总好过一屏紫黑格子
+        ResourceLocation paper = currentTexture();
+        if (PageCanvas.loads(paper)) {
+            guiGraphics.blit(paper, layout.x(), layout.y(), layout.w(), layout.h(),
+                    layout.u(), layout.v(), layout.uw(), layout.vh(), layout.texW(), layout.texH());
+        }
         // 左侧栏的底：画在控件之前，否则会把输入框和按钮盖成灰的。
         // 用接近不透明的黑，免得 HUD（快捷栏、进度提示）从底栏里透出来显得脏。
         guiGraphics.fill(this.panelX - 4, this.panelTop, this.panelX + this.panelW + 4, this.panelBottom,

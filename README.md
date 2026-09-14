@@ -82,6 +82,12 @@ gradlew.bat build
 
 The jar is produced in `build/libs/`.
 
+When a new jar is dropped into a test instance, do it while the game is closed, or replace the file atomically
+(copy to `<mods>/<name>.jar.new`, then `Move-Item -Force`). Overwriting a jar in place while Minecraft is running
+truncates the archive under the JVM's open zip file and textures read from it later fail with a `ZipException`; the
+screens then fall back to another background instead of drawing the magenta/black missing texture, but the session
+stays broken until you restart the game or press `F3+T`.
+
 ## License
 
 CC BY-NC 4.0 (Attribution-NonCommercial 4.0 International)
