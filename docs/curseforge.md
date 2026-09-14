@@ -34,8 +34,8 @@ the <b>Fragment Chronicle</b> forever, even if the item itself is long gone.</p>
 (<code>[item:minecraft:apple]</code>) and placeholders like <code>%PLAYER%</code>.</p>
 
 <h2>The items</h2>
-<p>Everything a player can touch lives in the <b>Fragment Chronicle</b> creative tab: the journal, the two carriers, the
-ink and the inscription block.</p>
+<p>Everything a player can touch lives in the mod's own creative tab &mdash; also titled <b>Fragment Chronicle</b>: the
+journal, the two carriers, the ink and the inscription block.</p>
 <ul>
   <li><b>Fragment Chronicle</b> &mdash; the journal itself. Crafted from paper + feather + any enchanted book. Two tabs
       (Chronicles and Written Books &amp; Paper), search by title / narrator / description / mod, an All &harr; Collected
@@ -141,7 +141,7 @@ and <code>CHANGELOG.md</code> for every release's changes.</p>
 </ul>
 
 <h2>物品与玩法</h2>
-<p>玩家能接触到的所有东西都在<b>「破碎编年史」创造模式物品栏</b>里：编年史本体、两种载体、失传墨水与失传铭刻方块。</p>
+<p>玩家能接触到的所有东西都在<b>「破碎编年史」创造模式物品栏</b>里（这个创造栏和收集册同名）：编年史本体、两种载体、失传墨水与失传铭刻方块。</p>
 <ul>
   <li><b>破碎编年史</b>：收集册本体，配方为 纸 + 羽毛 + 任意附魔书。界面上有「编年史」与「成书与纸」两个标签页，
       可按标题 / 作者 / 描述 / 模组搜索，可在「全部 &harr; 已收录」之间切换，支持分卷与置顶；未收录的可点亮条目显示

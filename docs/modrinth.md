@@ -32,8 +32,8 @@ All three are read in the same screen: a full background image with a locked tex
 
 ## The items
 
-Everything a player can touch lives in the **Fragment Chronicle** creative tab: the journal, the two carriers, the ink
-and the inscription block.
+Everything a player can touch lives in the mod's own creative tab — also titled **Fragment Chronicle**: the
+journal, the two carriers, the ink and the inscription block.
 
 - **Fragment Chronicle** — the journal itself. Crafted from paper + feather + any enchanted book. Two tabs
   (Chronicles and Written Books & Paper), search by title / narrator / description / mod, an All ⇄ Collected filter,
@@ -142,7 +142,7 @@ The code and the translations of this mod were made together with AI.
 
 ### 物品与玩法
 
-玩家能接触到的所有东西都在**「破碎编年史」创造模式物品栏**里：编年史本体、两种载体、失传墨水与失传铭刻方块。
+玩家能接触到的所有东西都在**「破碎编年史」创造模式物品栏**里（这个创造栏和收集册同名）：编年史本体、两种载体、失传墨水与失传铭刻方块。
 
 - **破碎编年史**：收集册本体，配方为 纸 + 羽毛 + 任意附魔书。界面上有「编年史」与「成书与纸」两个标签页，
   可按标题 / 作者 / 描述 / 模组搜索，可在「全部 ⇄ 已收录」之间切换，支持分卷与置顶；未收录的可点亮条目显示 `？？？`，
