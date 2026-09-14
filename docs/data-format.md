@@ -522,6 +522,9 @@ ShardEntries.register(new ShardEntry(
   - `readVanillaBooks`（默认 true）：阅读原版成书与命名过的纸
   - `readInscriptions`（默认 true）：空手右键失传铭刻方块读出上面的文字
 - 物品功能开关（关掉后这件物品从创造模式物品栏消失、功能失效、配方移除，残片 / 残册也不再进战利品表）：
+  - `readingOnly`（默认 false）：**只保留阅读**。一个开关顶下面六件物品——开启时下面六项一律按关闭处理
+    （物品栏里没有它们、不能使用 / 合成 / 掉落，收集与收录一并停止，收集类成就消失），但阅读入口全部保留。
+    适合"只想要在物品栏里读文字、不想要手册与残片"的整合包。设置页里开着它时，下面六行只显示、点不动。
   - `collectionBookEnabled`（默认 true）：破碎编年史本体，**同时也是「收录」的总开关**。关掉后：收集册打不开、物品栏与配方里没有它，
     收录也一起停（阅读照常打开阅读界面，但不再往编年史里记、不弹收录提示，`chronicles` 那 8 个收集类成就与相关配方解锁成就也一并消失）。
   - `fragmentPageEnabled`（默认 true）：破碎残片
@@ -544,7 +547,13 @@ ShardEntries.register(new ShardEntry(
 - **模组设置**：模组本体的开关（阅读开关与物品功能开关都在这一页，悬停有说明）。服务端的项通过 `C2SConfigEdit` 请求服务端修改（需要 OP），
   只有客户端自己生效的项（残页 / 铭刻最大页数）直接写本地配置。
 
-**只想保留「在物品栏里读文字」**（不要手册、残片、残册、墨水、铭刻）：
+**只想保留「在物品栏里读文字」**（不要手册、残片、残册、墨水、铭刻）：开一个开关就行。
+
+```toml
+readingOnly = true   # 一键：上面六件物品 + 抄写配方全关，阅读照常
+```
+
+想单独控制某一件物品时再把 `readingOnly` 关掉，用下面这六项（`collectionBookEnabled` 同时是「收录」的总开关）：
 
 ```toml
 collectionBookEnabled = false   # 收集册 + 收录 + 收集类成就一起停
@@ -575,8 +584,11 @@ transcribeEnabled = false
 ```
 
 - `key`：本模组配置里的布尔项名（`allowCraftingModItems`、`writingEnabled`、`enableBuiltinEntries`、`builtinLootEnabled`、
-  `enforceStoryChain`、`enforceGates`……），和 `config/broken_chronicles-common.toml` 里一致
+  `enforceStoryChain`、`enforceGates`、`readingOnly`、`collectionBookEnabled`……），和 `config/broken_chronicles-common.toml` 里一致
 - `expected`：期望的值，默认 `true`；写 `false` 就是「这一项关掉时才加载」
+- 物品那几项（`collectionBookEnabled`、`fragmentPageEnabled`、`shardBookEnabled`、`fragmentInkEnabled`、
+  `lostInscriptionEnabled`、`transcribeEnabled`）问的是**实际还开不开**：`readingOnly = true` 时它们一律算 `false`，
+  所以配方 / 成就 / 战利品表不用再单独判一次总开关
 
 条件只在数据包加载时求值一次，所以玩家改完配置要 `/reload`。本模组自己的三条配方就是这样接上面的开关的。
 

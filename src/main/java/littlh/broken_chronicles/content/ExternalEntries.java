@@ -696,6 +696,9 @@ public final class ExternalEntries {
                 readInscriptions      默认 true。空手右键失传铭刻方块读出上面的文字。
                 物品功能开关（关掉后这件物品从创造模式物品栏消失、功能失效、配方移除，
                 残片 / 残册也不再进战利品表）：
+                readingOnly           默认 false。只保留阅读：一个开关顶下面六件物品，开着时它们一律按关处理
+                                      （物品栏里没有、不能使用 / 合成 / 掉落，收集与收录一并停止），
+                                      阅读入口全部保留。适合"只想要在物品栏里读文字"的整合包。
                 collectionBookEnabled 默认 true。破碎编年史本体，同时也是「收录」的总开关。
                                       关掉后：收集册打不开、物品栏与配方里没有它；收录也一起停——阅读照常打开
                                       阅读界面，但不再往编年史里记、不弹收录提示，那 8 个收集类成就
@@ -708,9 +711,9 @@ public final class ExternalEntries {
                 transcribeEnabled     默认 true。抄写配方。
                 六件物品全关掉、也没有创造栏条目时，本模组在创造模式物品栏里的标签页会整个消失，不会留空白页
                 （数据包条目要等数据包加载完才看得到，靠 creative: true 的条目做展示时请至少留一件物品开关开着）。
-                只想保留「在物品栏里读文字」：把上面这六项全设 false 即可，还能读的是被打上文字的物品、
-                原版成书、命名过的纸。在游戏里改这些开关用 /broken_chronicles settings（需要 OP；
-                失传墨水关掉后这是唯一入口）。
+                只想保留「在物品栏里读文字」：把 readingOnly 打开就行（把上面六项分别设 false 也一样），
+                还能读的是被打上文字的物品、原版成书、命名过的纸。在游戏里改这些开关用
+                /broken_chronicles settings（需要 OP；失传墨水关掉后这是唯一入口）。
                 数据包也可以直接读这些开关：把 "neoforge:conditions": [ { "type": "broken_chronicles:config",
                 "key": "allowCraftingModItems" } ] 写进任意配方 / 战利品表 JSON，就能跟着本模组的配置一起开关。
                 书写：主手失传墨水，副手拿纸（写 page）/ 书与笔（写 book）/ 任意物品（打 tag），右键墨水。
@@ -1003,6 +1006,11 @@ public final class ExternalEntries {
                 readInscriptions      Default true. Right-click a Lost Inscription block with an empty hand.
                 Item switches (off means the item leaves the creative tab, stops working, loses its
                 recipe, and fragments / tomes stop being injected into loot tables):
+                readingOnly           Default false. Reading only: one switch that overrides the six items
+                                      below (they behave as off: gone from the creative tab, unusable,
+                                      uncraftable, no loot; collecting stops as well) while every reading
+                                      entry point stays. For packs that only want text readable in the
+                                      inventory.
                 collectionBookEnabled Default true. The Broken Chronicle itself, and the master switch for
                                       collecting. Off: the chronicle cannot be opened, is gone from the creative
                                       tab and its recipe is removed, and collecting stops - reading still opens
@@ -1016,9 +1024,10 @@ public final class ExternalEntries {
                 With all six items off and no creative entries around, the mod's creative tab is not registered
                 at all, so no empty page is left behind (datapack entries are not visible at that point yet; if
                 you rely on creative: true entries, keep at least one item switch on).
-                Reading only (no journal, fragments, tomes, ink or inscription): set all six to false. What
-                stays readable: items carrying text, written books and named paper. Change these in game with
-                /broken_chronicles settings (needs OP; the only entry point once Lost Ink is off).
+                Reading only (no journal, fragments, tomes, ink or inscription): turn on readingOnly (setting
+                all six to false works too). What stays readable: items carrying text, written books and named
+                paper. Change these in game with /broken_chronicles settings (needs OP; the only entry point
+                once Lost Ink is off).
                 Datapacks can read these switches directly: put "neoforge:conditions":
                 [ { "type": "broken_chronicles:config", "key": "allowCraftingModItems" } ] into any recipe
                 or loot table JSON to follow this mod's config.

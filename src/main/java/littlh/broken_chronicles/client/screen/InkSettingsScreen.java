@@ -411,9 +411,14 @@ public class InkSettingsScreen extends Screen {
     // ==================== 模组设置 ====================
 
     private void addServerRow(String key, BooleanSupplier getter, Runnable press) {
+        addServerRow(key, getter, press, () -> true);
+    }
+
+    /** active 传 false 时这一行只显示不可点（总开关开着时，被它盖住的几项就是这样）。 */
+    private void addServerRow(String key, BooleanSupplier getter, Runnable press, BooleanSupplier active) {
         rows.add(new Row(Component.translatable("broken_chronicles.gui.settings." + key),
                 Component.translatable("broken_chronicles.gui.settings." + key + ".tip"),
-                () -> onOff(getter.getAsBoolean()), press, () -> true));
+                () -> onOff(getter.getAsBoolean()), press, active));
     }
 
     private void addModRows() {
@@ -454,19 +459,23 @@ public class InkSettingsScreen extends Screen {
                 () -> toggle("readVanillaBooks", this.mirror.readVanillaBooks()));
         addServerRow("readInscriptions", this.mirror::readInscriptions,
                 () -> toggle("readInscriptions", this.mirror.readInscriptions()));
-        // 物品功能开关：一件物品一个，关掉后它从创造栏、配方、战利品表里一起消失
+        // 物品功能开关：一件物品一个，关掉后它从创造栏、配方、战利品表里一起消失。
+        // 上面那个「只保留阅读」是它们的总闸：开着的时候这六行只是显示（值为关、点不动）。
+        addServerRow("readingOnly", this.mirror::readingOnly,
+                () -> toggle("readingOnly", this.mirror.readingOnly()));
+        BooleanSupplier itemRowActive = () -> !this.mirror.readingOnly();
         addServerRow("collectionBookEnabled", this.mirror::collectionBookEnabled,
-                () -> toggle("collectionBookEnabled", this.mirror.collectionBookEnabled()));
+                () -> toggle("collectionBookEnabled", this.mirror.collectionBookEnabled()), itemRowActive);
         addServerRow("fragmentPageEnabled", this.mirror::fragmentPageEnabled,
-                () -> toggle("fragmentPageEnabled", this.mirror.fragmentPageEnabled()));
+                () -> toggle("fragmentPageEnabled", this.mirror.fragmentPageEnabled()), itemRowActive);
         addServerRow("shardBookEnabled", this.mirror::shardBookEnabled,
-                () -> toggle("shardBookEnabled", this.mirror.shardBookEnabled()));
+                () -> toggle("shardBookEnabled", this.mirror.shardBookEnabled()), itemRowActive);
         addServerRow("fragmentInkEnabled", this.mirror::fragmentInkEnabled,
-                () -> toggle("fragmentInkEnabled", this.mirror.fragmentInkEnabled()));
+                () -> toggle("fragmentInkEnabled", this.mirror.fragmentInkEnabled()), itemRowActive);
         addServerRow("lostInscriptionEnabled", this.mirror::lostInscriptionEnabled,
-                () -> toggle("lostInscriptionEnabled", this.mirror.lostInscriptionEnabled()));
+                () -> toggle("lostInscriptionEnabled", this.mirror.lostInscriptionEnabled()), itemRowActive);
         addServerRow("transcribeEnabled", this.mirror::transcribeEnabled,
-                () -> toggle("transcribeEnabled", this.mirror.transcribeEnabled()));
+                () -> toggle("transcribeEnabled", this.mirror.transcribeEnabled()), itemRowActive);
         rows.add(new Row(Component.translatable("broken_chronicles.gui.settings.pagePages"),
                 Component.translatable("broken_chronicles.gui.settings.pagePages.tip"),
                 () -> Component.literal(String.valueOf(ModConfig.PAGE_WRITING_MAX_PAGES.get())),

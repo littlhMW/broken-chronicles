@@ -256,7 +256,7 @@ public final class ModPackets {
 
     /** 改完要重载数据包的键：这些开关被配方 / 战利品表的数据包条件引用着。 */
     private static final java.util.Set<String> RELOAD_KEYS = java.util.Set.of(
-            "allowCraftingModItems", "collectionBookEnabled", "fragmentInkEnabled",
+            "allowCraftingModItems", "readingOnly", "collectionBookEnabled", "fragmentInkEnabled",
             "lostInscriptionEnabled", "transcribeEnabled");
 
     /** 只允许改这几个键，避免客户端乱写配置。 */
@@ -285,9 +285,17 @@ public final class ModPackets {
             case "readTaggedItems" -> ModConfig.READ_TAGGED_ITEMS.set(Boolean.parseBoolean(value));
             case "readVanillaBooks" -> ModConfig.READ_VANILLA_BOOKS.set(Boolean.parseBoolean(value));
             case "readInscriptions" -> ModConfig.READ_INSCRIPTIONS.set(Boolean.parseBoolean(value));
+            case "readingOnly" -> {
+                ModConfig.READING_ONLY.set(Boolean.parseBoolean(value));
+                // 自带残片按残页开关注册/注销，改完立刻重新同步一次
+                littlh.broken_chronicles.content.BuiltinEntries.sync();
+            }
             case "collectionBookEnabled" ->
                     ModConfig.COLLECTION_BOOK_ENABLED.set(Boolean.parseBoolean(value));
-            case "fragmentPageEnabled" -> ModConfig.FRAGMENT_PAGE_ENABLED.set(Boolean.parseBoolean(value));
+            case "fragmentPageEnabled" -> {
+                ModConfig.FRAGMENT_PAGE_ENABLED.set(Boolean.parseBoolean(value));
+                littlh.broken_chronicles.content.BuiltinEntries.sync();
+            }
             case "shardBookEnabled" -> ModConfig.SHARD_BOOK_ENABLED.set(Boolean.parseBoolean(value));
             case "fragmentInkEnabled" -> ModConfig.FRAGMENT_INK_ENABLED.set(Boolean.parseBoolean(value));
             case "lostInscriptionEnabled" -> ModConfig.LOST_INSCRIPTION_ENABLED.set(Boolean.parseBoolean(value));

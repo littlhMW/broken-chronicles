@@ -199,6 +199,8 @@
   "broken_chronicles.gui.settings.readVanillaBooks.tip": "原版成书与命名过的纸的阅读与收录。关掉后按阅读键打不开（成书右键仍走原版界面，只是不收录）。需要 OP。",
   "broken_chronicles.gui.settings.readInscriptions": "阅读失传铭刻",
   "broken_chronicles.gui.settings.readInscriptions.tip": "空手右键失传铭刻方块读出上面的文字。关掉后右键没反应，文字不会丢。需要 OP。",
+  "broken_chronicles.gui.settings.readingOnly": "只保留阅读",
+  "broken_chronicles.gui.settings.readingOnly.tip": "一键关掉本模组所有物品（收集册 / 残片 / 残册 / 墨水 / 铭刻）与抄写配方，只留下阅读：右键、阅读键、背包界面里悬浮按阅读键都能打开文字。没有收集册，所以也不再收录、不再有收集类成就。开着时下面六项会被盖住。需要 OP。",
   "broken_chronicles.gui.settings.collectionBookEnabled": "破碎编年史与收录",
   "broken_chronicles.gui.settings.collectionBookEnabled.tip": "关掉后右键打不开收集册，物品栏与配方里也没有它；「收录」也一起停（阅读照常，但不再记录，也不弹收录提示，收集类成就消失）。需要 OP。",
   "broken_chronicles.gui.settings.fragmentPageEnabled": "破碎残片",

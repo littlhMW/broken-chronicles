@@ -64,9 +64,24 @@ public final class ModFeatures {
 
     // ==================== 物品功能 ====================
 
+    /**
+     * 「只保留阅读」：一个开关顶下面六件物品。
+     * <p>
+     * 开启后下面六个方法一律返回 false，等于一键关掉本模组的所有物品（收集册、残片、残册、墨水、
+     * 铭刻、抄写），但阅读入口不动——适合"只要在物品栏里读文字"的整合包。
+     */
+    public static boolean readingOnly() {
+        return get(ModConfig.READING_ONLY, false);
+    }
+
+    /** 这一件物品的功能还开不开：总开关关掉时全部当作没开。 */
+    private static boolean itemEnabled(ModConfigSpec.BooleanValue value) {
+        return !readingOnly() && get(value, true);
+    }
+
     /** 「破碎编年史」本体（收集册）。 */
     public static boolean collectionBookEnabled() {
-        return get(ModConfig.COLLECTION_BOOK_ENABLED, true);
+        return itemEnabled(ModConfig.COLLECTION_BOOK_ENABLED);
     }
 
     /**
@@ -81,26 +96,26 @@ public final class ModFeatures {
 
     /** 「破碎残片」。 */
     public static boolean fragmentPageEnabled() {
-        return get(ModConfig.FRAGMENT_PAGE_ENABLED, true);
+        return itemEnabled(ModConfig.FRAGMENT_PAGE_ENABLED);
     }
 
     /** 「破碎残册」。 */
     public static boolean shardBookEnabled() {
-        return get(ModConfig.SHARD_BOOK_ENABLED, true);
+        return itemEnabled(ModConfig.SHARD_BOOK_ENABLED);
     }
 
     /** 「失传墨水」。 */
     public static boolean fragmentInkEnabled() {
-        return get(ModConfig.FRAGMENT_INK_ENABLED, true);
+        return itemEnabled(ModConfig.FRAGMENT_INK_ENABLED);
     }
 
     /** 「失传铭刻」。 */
     public static boolean lostInscriptionEnabled() {
-        return get(ModConfig.LOST_INSCRIPTION_ENABLED, true);
+        return itemEnabled(ModConfig.LOST_INSCRIPTION_ENABLED);
     }
 
     /** 抄写配方。 */
     public static boolean transcribeEnabled() {
-        return get(ModConfig.TRANSCRIBE_ENABLED, true);
+        return itemEnabled(ModConfig.TRANSCRIBE_ENABLED);
     }
 }

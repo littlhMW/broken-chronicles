@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import littlh.broken_chronicles.ModConfig;
+import littlh.broken_chronicles.ModFeatures;
 import net.neoforged.neoforge.common.conditions.ICondition;
 
 /**
@@ -22,7 +23,10 @@ import net.neoforged.neoforge.common.conditions.ICondition;
  * syncEntryContentToClients、allowSurvivalInscriptionMimic、enforceStoryChain、enforceGates，
  * 以及阅读与物品功能开关：readingEnabled、readOnRightClick、readWhileHolding、readInContainerScreens、
  * readTaggedItems、readVanillaBooks、readInscriptions、collectionBookEnabled、fragmentPageEnabled、
- * shardBookEnabled、fragmentInkEnabled、lostInscriptionEnabled、transcribeEnabled。
+ * shardBookEnabled、fragmentInkEnabled、lostInscriptionEnabled、transcribeEnabled、readingOnly。
+ * <p>
+ * 物品那几项问的是「实际还开不开」：readingOnly 开着时它们一律算 false，所以配方 / 成就 /
+ * 战利品表都不用再单独判一次总开关。
  * <p>
  * 条件在数据包加载时求值一次，所以配置改动后要 /reload（游戏内「设置 → 模组设置」里改会自动重载一次）。
  */
@@ -66,12 +70,13 @@ public record ConfigCondition(String key, boolean expected) implements IConditio
                 case "readTaggedItems" -> ModConfig.READ_TAGGED_ITEMS.get();
                 case "readVanillaBooks" -> ModConfig.READ_VANILLA_BOOKS.get();
                 case "readInscriptions" -> ModConfig.READ_INSCRIPTIONS.get();
-                case "collectionBookEnabled" -> ModConfig.COLLECTION_BOOK_ENABLED.get();
-                case "fragmentPageEnabled" -> ModConfig.FRAGMENT_PAGE_ENABLED.get();
-                case "shardBookEnabled" -> ModConfig.SHARD_BOOK_ENABLED.get();
-                case "fragmentInkEnabled" -> ModConfig.FRAGMENT_INK_ENABLED.get();
-                case "lostInscriptionEnabled" -> ModConfig.LOST_INSCRIPTION_ENABLED.get();
-                case "transcribeEnabled" -> ModConfig.TRANSCRIBE_ENABLED.get();
+                case "readingOnly" -> ModFeatures.readingOnly();
+                case "collectionBookEnabled" -> ModFeatures.collectionBookEnabled();
+                case "fragmentPageEnabled" -> ModFeatures.fragmentPageEnabled();
+                case "shardBookEnabled" -> ModFeatures.shardBookEnabled();
+                case "fragmentInkEnabled" -> ModFeatures.fragmentInkEnabled();
+                case "lostInscriptionEnabled" -> ModFeatures.lostInscriptionEnabled();
+                case "transcribeEnabled" -> ModFeatures.transcribeEnabled();
                 default -> true;
             };
         } catch (Exception e) {

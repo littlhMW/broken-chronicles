@@ -48,6 +48,7 @@ public final class ServerSettings {
         defaults.put("readTaggedItems", true);
         defaults.put("readVanillaBooks", true);
         defaults.put("readInscriptions", true);
+        defaults.put("readingOnly", false);
         defaults.put("collectionBookEnabled", true);
         defaults.put("fragmentPageEnabled", true);
         defaults.put("shardBookEnabled", true);
@@ -138,6 +139,7 @@ public final class ServerSettings {
                     Map.entry("readTaggedItems", ModConfig.READ_TAGGED_ITEMS.get()),
                     Map.entry("readVanillaBooks", ModConfig.READ_VANILLA_BOOKS.get()),
                     Map.entry("readInscriptions", ModConfig.READ_INSCRIPTIONS.get()),
+                    Map.entry("readingOnly", ModConfig.READING_ONLY.get()),
                     Map.entry("collectionBookEnabled", ModConfig.COLLECTION_BOOK_ENABLED.get()),
                     Map.entry("fragmentPageEnabled", ModConfig.FRAGMENT_PAGE_ENABLED.get()),
                     Map.entry("shardBookEnabled", ModConfig.SHARD_BOOK_ENABLED.get()),
@@ -229,27 +231,37 @@ public final class ServerSettings {
 
     // ==================== 物品功能 ====================
 
+    /** 「只保留阅读」：开启时下面六件物品一律当作关闭（和 ModFeatures#readingOnly 一致）。 */
+    public boolean readingOnly() {
+        return get("readingOnly");
+    }
+
+    /** 这一件物品的功能还开不开：总开关关掉时全部当作没开。 */
+    private boolean itemEnabled(String key) {
+        return !readingOnly() && get(key);
+    }
+
     public boolean collectionBookEnabled() {
-        return get("collectionBookEnabled");
+        return itemEnabled("collectionBookEnabled");
     }
 
     public boolean fragmentPageEnabled() {
-        return get("fragmentPageEnabled");
+        return itemEnabled("fragmentPageEnabled");
     }
 
     public boolean shardBookEnabled() {
-        return get("shardBookEnabled");
+        return itemEnabled("shardBookEnabled");
     }
 
     public boolean fragmentInkEnabled() {
-        return get("fragmentInkEnabled");
+        return itemEnabled("fragmentInkEnabled");
     }
 
     public boolean lostInscriptionEnabled() {
-        return get("lostInscriptionEnabled");
+        return itemEnabled("lostInscriptionEnabled");
     }
 
     public boolean transcribeEnabled() {
-        return get("transcribeEnabled");
+        return itemEnabled("transcribeEnabled");
     }
 }

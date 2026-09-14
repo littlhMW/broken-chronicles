@@ -96,10 +96,16 @@ public final class BuiltinEntries {
         return out;
     }
 
-    /** 是否注册自带残片。 */
+    /**
+     * 是否注册自带残片。
+     * <p>
+     * 残页载体被关掉时（例如「只保留阅读」）也返回 false：自带残片都是 PAGE，没有载体可依附，
+     * 注册了谁都拿不到，不如不注册。
+     */
     public static boolean enabled() {
         try {
-            return ModConfig.ENABLE_BUILTIN_ENTRIES.get();
+            return ModConfig.ENABLE_BUILTIN_ENTRIES.get()
+                    && littlh.broken_chronicles.ModFeatures.fragmentPageEnabled();
         } catch (Exception e) {
             return true;
         }

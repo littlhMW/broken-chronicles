@@ -1,7 +1,6 @@
 package littlh.broken_chronicles;
 
 import littlh.broken_chronicles.content.BuiltinEntries;
-import littlh.broken_chronicles.content.EntryType;
 import littlh.broken_chronicles.content.ShardContentHelper;
 import littlh.broken_chronicles.content.ShardEntries;
 import littlh.broken_chronicles.content.ShardEntry;
@@ -39,8 +38,9 @@ public final class ModCreativeTabs {
     /**
      * 还要不要这个标签页。
      * <p>
-     * 只要有任一件本模组物品还开着就显示；物品全关掉时，只有当前已经注册了创造栏条目
-     * （本模组自带、config 里的外部条目，或其它模组通过接口注册的）才留。
+     * 只要有任一件本模组物品还开着就显示；物品全关掉时，只有当前真的放得进去东西
+     * （本模组自带、config 里的外部条目，或其它模组通过接口注册的创造栏条目）才留。
+     * 载体被关掉的条目不算——「只保留阅读」时自带残片都是 PAGE，一个都放不进去，留个空页没有意义。
      * 数据包里的条目要等数据包加载完才看得到，那种情况下请至少留一件物品开关开着。
      */
     private static boolean visible() {
@@ -50,9 +50,18 @@ public final class ModCreativeTabs {
             return true;
         }
         for (ShardEntry entry : ShardEntries.all()) {
-            if (entry.creative()) return true;
+            if (entry.creative() && carrierEnabled(entry)) return true;
         }
         return false;
+    }
+
+    /** 这条条目的载体物品还开不开（tag 依附在别的物品上，不受本模组的物品开关影响）。 */
+    private static boolean carrierEnabled(ShardEntry entry) {
+        return switch (entry.type()) {
+            case PAGE -> ModFeatures.fragmentPageEnabled();
+            case BOOK -> ModFeatures.shardBookEnabled();
+            case TAG -> true;
+        };
     }
 
     private static CreativeModeTab build() {
@@ -73,8 +82,7 @@ public final class ModCreativeTabs {
                     for (ShardEntry entry : ShardEntries.all()) {
                         if (!entry.creative()) continue;
                         // 载体被关掉的条目也不给：残页 / 残册关了，对应条目在创造栏里没有意义
-                        if (entry.type() == EntryType.PAGE && !ModFeatures.fragmentPageEnabled()) continue;
-                        if (entry.type() == EntryType.BOOK && !ModFeatures.shardBookEnabled()) continue;
+                        if (!carrierEnabled(entry)) continue;
                         // 故事链条：前置没收录的条目不出现在创造栏（创造模式想全看，
                         // 把条目 JSON 的 requires 去掉即可）
                         if (!entry.requires().isEmpty()

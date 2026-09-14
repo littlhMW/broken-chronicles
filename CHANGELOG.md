@@ -77,6 +77,8 @@ the mod version.
 - 阅读拆成 7 个独立开关：`readingEnabled`（总开关）、`readOnRightClick`（右键）、`readWhileHolding`（手持按阅读键）、
   `readInContainerScreens`（物品栏 / 容器界面里悬浮按阅读键）、`readTaggedItems`（带文字的物品）、
   `readVanillaBooks`（原版成书与命名过的纸）、`readInscriptions`（失传铭刻）。
+- 「只保留阅读」`readingOnly`（默认 false）：一个开关把上面那六件物品与抄写配方全按掉，只留下阅读入口——
+  适合"只想要在物品栏里读文字、不想要手册与残片"的整合包。开着时下面六项一律按关处理，设置页里那六行只显示、点不动。
 - 每件物品一个功能开关：`collectionBookEnabled`、`fragmentPageEnabled`、`shardBookEnabled`、`fragmentInkEnabled`、
   `lostInscriptionEnabled`、`transcribeEnabled`。关掉后该物品从创造模式物品栏消失、功能失效、配方移除，
   残片 / 残册也不再注入战利品表。
@@ -88,8 +90,8 @@ the mod version.
 - 关掉任何开关都不会给玩家任何提示：入口直接当作没发生，聊天栏与动作栏都不出现文字。
 - 新增客户端指令 `/broken_chronicles settings`：直接打开模组设置页（需要 OP）。失传墨水被关掉后，
   这是唯一能进设置界面的入口。
-- 「只想保留在物品栏里读文字」的整合包：把六件物品开关全设 false 即可，还能读的是被打上文字的物品、
-  原版成书与命名过的纸。写法见 `docs/data-format.md` 第 5 节。
+- 「只想保留在物品栏里读文字」的整合包：打开 `readingOnly` 一个开关就行（把六件物品开关分别设 false 也一样），
+  还能读的是被打上文字的物品、原版成书与命名过的纸。写法见 `docs/data-format.md` 第 5 节。
 
 ### 变更
 
@@ -200,7 +202,9 @@ Settings -> Mod Settings tab (tooltip per row; server rows need OP), can be used
 stops responding with no chat or action-bar message. `collectionBookEnabled` is also the master switch for collecting:
 with it off, reading still opens but nothing is recorded, no collect toast appears and the eight collection advancements
 are gone. With all six items off (and no creative entries) the mod's creative tab is not registered at all, so no empty
-page is left behind — a pack can ship reading-only. `/broken_chronicles settings` opens the switch screen in game
+page is left behind — a pack can ship reading-only. `readingOnly` (default false) does that with a single switch: it
+overrides all six item switches, so a pack that only wants "read text in the inventory" flips one row (the six rows below
+it then show as off and cannot be clicked). `/broken_chronicles settings` opens the switch screen in game
 (needs OP), which is the only way in once Lost Ink is switched off.
 
 **Changed** — license is now CC BY-NC 4.0; chronicle tabs are "Chronicle / Books & Paper" and every UI string is
