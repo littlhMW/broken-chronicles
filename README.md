@@ -8,18 +8,19 @@
 
 ## Features
 
-- **Three record types**
-  - `page` — single-sheet fragments (paper, leaf, scrap...); one fragment can hold a couple of pages
-  - `book` — multi-page tomes, each page can have its own texture
-  - `tag` — text bound to an item; the item keeps working normally (eat the apple, swing the sword)
+- **Three record types**, all filled in by a datapack or another mod
+  - `page` — single-sheet fragments (paper, leaf, scrap...). Carrier: **Broken Fragment** (破碎残片); one can hold a couple of pages
+  - `book` — multi-page tomes. Carrier: **Broken Tome** (破碎残册); every page can have its own texture
+  - `tag` — text bound to a single item instance; the item keeps working normally (eat the apple, swing the sword)
+- **The items** — *Fragment Chronicle* (破碎编年史, the journal itself: paper + feather + any enchanted book), *Broken Fragment*, *Broken Tome*, *Lost Ink* (失传墨水) and the *Lost Inscription* (失传铭刻) block. Everything a player can touch sits in the **Fragment Chronicle** creative tab.
 - **Read & collect** — press **N** while hovering an item in your inventory (chests and other container screens included) or while holding it, or right-click a fragment / tome. Reading automatically unlocks the entry in your chronicle without consuming the item, and closing an entry opened from the chronicle or the inventory returns you to that screen.
-- **Vanilla books and named paper are first class** — a written book still opens the real vanilla book screen and is collected when read; named paper gets a page of its own. Both live in the chronicle's **Books & Paper** tab.
+- **Vanilla books and named paper are first class** — a written book still opens the real vanilla book screen and is collected when read; named paper gets a page of its own. Both live in the chronicle's **Written Books & Paper** (成书与纸) tab.
 - **Light-up entries** — revealable entries show as `???` until discovered; optional auto-unlock on login. The `???` list is **off by default** (`showUnknownEntries`) and the built-in fragments are not revealable, so a fresh chronicle shows only what you have actually collected until a pack turns it on.
-- **Writing ink** — craft *Lost Ink* (glow ink sac + ink sac + feather, shapeless) to write your own pages, books or item tags with a full multi-page editor (vanilla book & quill UI; a fragment page holds few pages, a tome holds many). The editor is **off by default** (writingEnabled = false in the config): players only read and collect, and only pack authors turn it on. The server-side switch is synced to clients.
+- **Writing ink** — craft *Lost Ink* (glow ink sac + ink sac + feather, shapeless) to write your own pages, books or item tags with a full multi-page editor (vanilla book & quill UI — one Broken Fragment holds a couple of pages, one Broken Tome holds many). The editor is **off by default** (writingEnabled = false in the config): players only read and collect, and only pack authors turn it on. The server-side switch is synced to clients.
    - `authorExportEnabled` (default false) adds an *Export JSON* button to the editor for turning what you wrote into a datapack entry.
   - The editor's **Settings** button (top right) has two tabs. **This Entry** covers every field of the entry JSON — id, order, pinned, reveal, unlocked-by-default, world scope, creative tab, group/volume, narrator, description, hint, clue, autopagination, loot tables, story-chain requirements, runtime gates, load conditions, on-collect hooks, and the tag source filters — so a pack author can write the text, pick a background and configure the whole entry in one place, then export it. **Mod Settings** exposes the mod's own switches (including `allowCraftingModItems`, which removes the ink/inscription/transcribe recipes without touching the Chronicle recipe). Server-side rows go through `C2SConfigEdit` and need OP.
 - **Lost Inscription** — a block crafted from a ring of chiseled stone bricks around one Lost Ink. Write on it by holding Lost Ink and right-clicking; read it with an empty hand (reading collects the text). Sneak + right-click with a block makes the inscription *mimic* that block's look (creative only by default; `allowSurvivalInscriptionMimic` lets survival players do it too). Breaking it returns an item that keeps both the words and the mimic look, and structures store them.
-- **Transcribing** — vanilla ink sac + paper + anything already written (fragment page, tome, an inscribed item, a written book). It makes one identical copy: a sheet of paper plus ink gives you a second item that carries everything — enchantments, signature, custom name, and the mod's own text and background. The original stays in the grid, so you end up with two. More paper copies more (up to 8).
+- **Transcribing** — vanilla ink sac + paper + anything already written (Broken Fragment, Broken Tome, an inscribed item, a written book). It makes one identical copy: a sheet of paper plus ink gives you a second item that carries everything — enchantments, signature, custom name, and the mod's own text and background. The original stays in the grid, so you end up with two. More paper copies more (up to 8).
 - **Story chains** — an entry can declare `requires: ["other_mod:entry"]`: until the player has collected those entries it never rolls from loot tables, never spawns on tag items and is not shown in the collection book at all (not even as `???`). The check is per player, uses each player's own chronicle, and works in datapacks (`broken_chronicles:has_entry` loot condition) and from the API (`builder.requires(...)`, `StoryChain.satisfied(...)`).
 - **Library** — inject entries into any loot table via the entry `loot_tables` field, centrally via `data/<ns>/shards_loot/*.json` / `config/broken_chronicles/loot.json`, or from another mod with the vanilla loot modifier `broken_chronicles:add_entry`.
 - **Volumes** — entries can declare a `group` / `group_title`, and the chronicle shows them as volumes instead of one long list; there is also a search box (title / narrator / description / mod id) and an All / Collected filter. The collected `x/y` counter is off by default (`showCollectionProgress`).
@@ -57,7 +58,7 @@ Put the jar into your `mods` folder.
 
 ## Usage
 
-- Right-click a fragment / book to read it; reading auto-collects it into the chronicle (the item stays in your inventory).
+- Right-click a Broken Fragment / Broken Tome to read it; reading auto-collects it into the chronicle (the item stays in your inventory).
 - Press **N** (configurable in Controls) while hovering an item in your inventory to read it — works for mod pages/books, tagged items, vanilla written books and named paper.
 - **Vanilla books stay vanilla** — a written book always opens the vanilla book screen (the mod calls it directly, even when the book is bound to an entry); the mod only collects it. The entry's own text/background shows when you open it from the collection book.
 - Open the chronicle (craft: paper + feather + enchanted book) to browse collected entries.

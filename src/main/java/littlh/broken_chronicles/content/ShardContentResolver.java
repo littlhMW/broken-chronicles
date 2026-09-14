@@ -38,7 +38,7 @@ public final class ShardContentResolver {
         }
 
         if (stack.is(ModItems.FRAGMENT_PAGE.get()) || stack.is(ModItems.SHARD_BOOK.get())) {
-            // 空白碎片纸/手记书：右键也打开阅读界面，显示空白提示，不收录。
+            // 空白破碎残片 / 破碎残册：右键也打开阅读界面，显示空白提示，不收录。
             EntryType blankType = stack.is(ModItems.SHARD_BOOK.get()) ? EntryType.BOOK : EntryType.PAGE;
             return Optional.of(new ResolvedContent("blank:" + blankType.name().toLowerCase(), blankType,
                     Localized.of(""), List.of(Localized.of("")), List.of(), false));

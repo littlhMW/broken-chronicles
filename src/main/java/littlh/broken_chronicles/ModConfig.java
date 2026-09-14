@@ -8,7 +8,7 @@ public final class ModConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     public static final ModConfigSpec.BooleanValue AUTO_COLLECT_ON_READ = BUILDER
-            .comment("阅读任意可读物品（碎片/手记书/带文字物品/原版书/命名纸）时，自动收录进破碎编年史（收集册）。\n普通纸（未命名）不能阅读，也不收录。")
+            .comment("阅读任意可读物品（破碎残片 / 破碎残册 / 带文字物品 / 失传铭刻 / 原版成书 / 命名过的纸）时，自动收录进破碎编年史（收集册）。\n普通纸（未命名）不能阅读，也不收录。")
             .define("autoCollectOnRead", true);
 
     public static final ModConfigSpec.BooleanValue SHOW_UNKNOWN = BUILDER

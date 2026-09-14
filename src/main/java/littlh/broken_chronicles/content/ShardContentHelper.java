@@ -40,18 +40,18 @@ public final class ShardContentHelper {
         stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
     }
 
-    /** 生成玩家书写出的碎片纸 / 手记书（没有描述）。 */
+    /** 生成玩家书写出的破碎残片 / 破碎残册（没有描述）。 */
     public static ItemStack make(String type, String title, List<String> pages, List<String> textures) {
         return make(type, title, "", pages, textures);
     }
 
-    /** 生成玩家书写出的碎片纸 / 手记书。 */
+    /** 生成玩家书写出的破碎残片 / 破碎残册。 */
     public static ItemStack make(String type, String title, String description, List<String> pages,
                                  List<String> textures) {
         return make(type, title, description, null, pages, textures);
     }
 
-    /** 生成玩家书写出的碎片纸 / 手记书（带作者）。 */
+    /** 生成玩家书写出的破碎残片 / 破碎残册（带作者）。 */
     public static ItemStack make(String type, String title, String description, String author,
                                  List<String> pages, List<String> textures) {
         ItemStack stack = "book".equals(type)
@@ -89,7 +89,7 @@ public final class ShardContentHelper {
         data.put("textures", texturesTag);
     }
 
-    /** 生成条目对应的可阅读物品：page→碎片纸、book→手记书、tag→绑定物品。 */
+    /** 生成条目对应的可阅读物品：page→破碎残片、book→破碎残册、tag→绑定物品（失传铭刻则给铭刻物品）。 */
     public static ItemStack itemFor(ShardEntry entry) {
         ItemStack stack;
         switch (entry.type()) {
