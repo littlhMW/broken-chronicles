@@ -81,7 +81,7 @@ the mod version.
 - 书写功能默认关闭；合成模组物品可单独关闭（不影响「破碎编年史」本体的配方）。
 - 界面里不再单独列出「手写之物」，也不再给「铭刻」加分割标题；未命名条目的默认标题统一为「于某物上的一段文字」。
 - 统一物品与界面用词：破碎残片 / 破碎残册 / 破碎编年史 / 失传墨水 / 失传铭刻；书写界面的载体标签、英文界面名一并对齐
-  （`Fragment Page` → `Broken Fragment`，`Shard Book` → `Broken Tome`，收集册与创造栏 `Fragment Chronicle` → `Broken Chronicle` / `Broken Chronicles`，标签页 `Books & Paper` → `Written Books & Paper`）。
+  （`Fragment Page` → `Broken Fragment`，`Shard Book` → `Broken Tome`，收集册与创造栏 `Fragment Chronicle` → `Broken Chronicle` / `Broken Chronicles`，标签页英文名定为 `Books & Paper`，超过按钮宽度时自动缩小）。
 - 收录进度显示默认关闭。
 
 ### 修复
@@ -108,7 +108,7 @@ the mod version.
 - Items: Broken Chronicle, Broken Fragment, Broken Tome, Lost Ink. Block: Lost Inscription.
 - Reading collects the entry **without consuming the item**; the entry survives destroying, dropping or blowing up the item.
 - A fragment can hold several pages (2 by default in the editor, configurable); a tome can give **every page its own texture**.
-- Vanilla written books and named paper are collected into their own "Written Books & Paper" tab; vanilla books keep the vanilla reading screen.
+- Vanilla written books and named paper are collected into their own "Books & Paper" tab; vanilla books keep the vanilla reading screen.
 
 **Reading**
 
@@ -121,7 +121,7 @@ the mod version.
 
 **Chronicle UI**
 
-- Two tabs (Chronicle / Written Books & Paper), search (title / narrator / description / mod), All ⇄ Collected filter,
+- Two tabs (Chronicle / Books & Paper), search (title / narrator / description / mod), All ⇄ Collected filter,
   volumes, pinned entries, `???` for revealable entries (off by default), per-entry clue screen, world entries
   (`scope: world`) shared by the whole save, author/description on hover, optional collected counter.
 
@@ -169,9 +169,9 @@ the mod version.
 **Textures** — 9 paper backgrounds (old paper / old book / blood variants) plus a layout template, all on the
 512×288 canvas; item, block and chronicle-cover art.
 
-**Changed** — license is now CC BY-NC 4.0; chronicle tabs are "Chronicle / Written Books & Paper" and every UI string is
+**Changed** — license is now CC BY-NC 4.0; chronicle tabs are "Chronicle / Books & Paper" and every UI string is
 overridable; narrator is a search keyword instead of a filter; revealable entries, the writing editor, the collected
-counter and mod-item recipes are opt-in; untitled entries all read "some words on something"; item and UI names were unified (Broken Chronicle, Broken Fragment, Broken Tome, Lost Ink, Lost Inscription) and the vanilla tab is "Written Books & Paper".
+counter and mod-item recipes are opt-in; untitled entries all read "some words on something"; item and UI names were unified (Broken Chronicle, Broken Fragment, Broken Tome, Lost Ink, Lost Inscription) and the vanilla tab is "Books & Paper".
 
 **Fixed** — `N` while hovering items in container screens; a two-page fragment showing only one page; `Esc` quitting
 to the game from an entry; random background per opening; editor overflow, overlapping widgets and focus getting stuck

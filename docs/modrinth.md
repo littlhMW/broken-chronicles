@@ -16,7 +16,7 @@ carved into a sword, an old book someone signed and then forgot. Read them, and 
 - Right-click a fragment or a tome, or press `N` while holding it.
 - **Vanilla written books are first class.** A written book still opens the *real* vanilla book screen (the mod calls it
   directly, so nothing about it feels modded) — and reading it collects it. Named paper gets a page of its own. Both are
-  filed under the **Written Books & Paper** tab of the chronicle, next to the mod's own entries.
+  filed under the **Books & Paper** tab of the chronicle, next to the mod's own entries.
 - Reading **never consumes the item**, and losing, dropping or blowing up the item never loses the entry.
 
 ## Three kinds of record
@@ -36,7 +36,7 @@ Everything a player can touch lives in the **Broken Chronicles** creative tab: t
 ink and the inscription block.
 
 - **Broken Chronicle** — the journal itself. Crafted from paper + feather + any enchanted book. Two tabs
-  (Chronicles and Written Books & Paper), search by title / narrator / description / mod, an All ⇄ Collected filter,
+  (Chronicles and Books & Paper), search by title / narrator / description / mod, an All ⇄ Collected filter,
   volumes, pinned entries, `???` placeholders for undiscovered entries and per-entry clue screens.
 - **Lost Ink** — glow ink sac + ink sac + feather. Hold it with a carrier in the off hand and right-click to write;
   one ink is consumed.

@@ -627,7 +627,7 @@ public final class ExternalEntries {
                   翻页按钮  纸张左下、右下（仅 book），页码在纸张底部居中（仅 book）
                 收集册背景 textures/gui/collection_book.png 固定 256x256：
                   标题          y=22 居中；进度（已收录 x/y）在右上角，默认不显示（见配置 showCollectionProgress）
-                  标签页按钮    x=16 与 x=82，宽 64、高 21（画布右上方画好的两个凹槽）
+                  标签页按钮    x=16 与 x=82，宽 64、高 21（画布右上方画好的两个凹槽）；标签文字比按钮宽时自动缩小
                   列表面板      x=16..240，y=62..214
                   搜索/筛选行   y=218 起，高 16
 
@@ -895,7 +895,7 @@ public final class ExternalEntries {
                   page < >  bottom-left / bottom-right of the page (book only), page number bottom-centre
                 The collection book background textures/gui/collection_book.png is a fixed 256x256:
                   header        centred at y=22, progress (collected x/y) in the top-right, off by default (config showCollectionProgress)
-                  tab buttons   x=16 and x=82, 64x21 (matching the two slots painted in the texture)
+                  tab buttons   x=16 and x=82, 64x21 (matching the two slots painted in the texture);
                   list panel    x=16..240, y=62..214
                   search row    starts at y=218, 16 tall
 
@@ -986,7 +986,7 @@ public final class ExternalEntries {
                 Collection book & commands
                 -------------------------
                 Vanilla written books are auto-collected when opened by right-click; named paper is
-                collected after reading it with the read key (default N). Both appear in the "Written Books & Paper"
+                collected after reading it with the read key (default N). Both appear in the "Books & Paper"
                 tab of the collection book. Plain (unnamed) paper cannot be read or collected.
                 /broken_chronicles list [filter]        list every entry
                 /broken_chronicles validate             show entry loading problems

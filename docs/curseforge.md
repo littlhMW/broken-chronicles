@@ -17,7 +17,7 @@ the <b>Broken Chronicle</b> forever, even if the item itself is long gone.</p>
   <li>Right-click a fragment or a tome, or press <code>N</code> while holding it.</li>
   <li><b>Vanilla written books are first class.</b> A written book still opens the <i>real</i> vanilla book screen (the
       mod calls it directly, so nothing about it feels modded) &mdash; and reading it collects it. Named paper gets a page of
-      its own. Both are filed under the <b>Written Books &amp; Paper</b> tab of the chronicle, next to the mod's own entries.</li>
+      its own. Both are filed under the <b>Books &amp; Paper</b> tab of the chronicle, next to the mod's own entries.</li>
   <li>Reading <b>never consumes the item</b>, and losing, dropping or blowing up the item never loses the entry.</li>
 </ul>
 
@@ -38,7 +38,7 @@ the <b>Broken Chronicle</b> forever, even if the item itself is long gone.</p>
 the ink and the inscription block.</p>
 <ul>
   <li><b>Broken Chronicle</b> &mdash; the journal itself. Crafted from paper + feather + any enchanted book. Two tabs
-      (Chronicles and Written Books &amp; Paper), search by title / narrator / description / mod, an All &harr; Collected
+      (Chronicles and Books &amp; Paper), search by title / narrator / description / mod, an All &harr; Collected
       filter, volumes, pinned entries, <code>???</code> placeholders for undiscovered entries and per-entry clue screens.</li>
   <li><b>Lost Ink</b> &mdash; glow ink sac + ink sac + feather. Hold it with a carrier in the off hand and right-click to
       write; one ink is consumed.</li>

@@ -477,8 +477,15 @@ public class CollectionScreen extends Screen {
             boolean hovered = mouseX >= x && mouseX < x + TAB_W && mouseY >= tabY && mouseY < tabY + TAB_H;
             guiGraphics.blitSprite(ResourceLocation.withDefaultNamespace(selected || hovered
                     ? "widget/button_highlighted" : "widget/button"), x, tabY, TAB_W, TAB_H);
-            guiGraphics.drawString(this.font, label,
-                    x + TAB_W / 2 - this.font.width(label) / 2, tabY + (TAB_H - 8) / 2, 0xFFFFFFFF, false);
+            // 标签文字比按钮宽时等比缩小：英文名比中文长得多，直接画会压到另一个标签上
+            int textW = this.font.width(label);
+            float textScale = Math.min(1.0F, (TAB_W - 4) / (float) Math.max(1, textW));
+            var pose = guiGraphics.pose();
+            pose.pushPose();
+            pose.translate(x + TAB_W / 2.0D, tabY + (TAB_H - 8.0D * textScale) / 2.0D, 0.0D);
+            pose.scale(textScale, textScale, 1.0F);
+            guiGraphics.drawString(this.font, label, -textW / 2, 0, 0xFFFFFFFF, false);
+            pose.popPose();
         }
     }
 
