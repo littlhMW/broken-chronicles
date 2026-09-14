@@ -44,6 +44,7 @@ Everything is read in the same screen: a full background image with a locked tex
   searchable by title, narrator, description or mod id, and entries can be grouped into volumes.
 - **World entries** — make a story beat shared by the whole save instead of per player.
 - 24 built-in fragments ship as a working example of the style (and can be turned off entirely).
+
 ## Friendly to modpacks and to other mods
 
 - **Pure data driven.** No Java needed: drop `data/<namespace>/shards/<page|book|tag>/<id>.json` into a datapack. A
