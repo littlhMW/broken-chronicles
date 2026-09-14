@@ -9,9 +9,6 @@ you a story — it lets a modpack scatter one across the world: a page torn out 
 carved into a sword, an old book someone signed and then forgot. Read them, and they are recorded into the
 **Fragment Chronicle** forever, even if the item itself is long gone.
 
-Everything a player can touch is in the **Fragment Chronicle** creative tab: the journal, the carriers, the ink and the
-inscription block.
-
 ## Read anything, from anywhere
 
 - **Press `N` (`Read Text`) while hovering an item in your inventory.** The reading screen opens without picking the
@@ -34,6 +31,9 @@ All three are read in the same screen: a full background image with a locked tex
 (`[item:minecraft:apple]`) and placeholders like `%PLAYER%`.
 
 ## The items
+
+Everything a player can touch lives in the **Fragment Chronicle** creative tab: the journal, the two carriers, the ink
+and the inscription block.
 
 - **Fragment Chronicle** — the journal itself. Crafted from paper + feather + any enchanted book. Two tabs
   (Chronicles and Written Books & Paper), search by title / narrator / description / mod, an All ⇄ Collected filter,
@@ -107,6 +107,10 @@ Put the jar into your `mods` folder.
 
 CC BY-NC 4.0 (Attribution-NonCommercial 4.0 International)
 
+## Notes
+
+The code and the translations of this mod were made together with AI.
+
 ---
 
 ## 中文
@@ -116,8 +120,6 @@ CC BY-NC 4.0 (Attribution-NonCommercial 4.0 International)
 **《破碎编年史》是一套「碎片化叙事」的载体库**（Minecraft **1.21.1** / NeoForge）。它不替你把故事讲出来，而是让整合包把
 故事**散落到世界里**——地牢箱子里的半页日记、刻在剑上的一句警告、某个人签了名又忘掉的旧书。玩家读到它们，
 就会被永久记进**破碎编年史**，哪怕那件物品早就没了。
-
-玩家能接触到的所有东西都在**「破碎编年史」创造模式物品栏**里：编年史本体、两种载体、失传墨水与失传铭刻方块。
 
 ### 什么都能读，在哪儿都能读
 
@@ -139,6 +141,8 @@ CC BY-NC 4.0 (Attribution-NonCommercial 4.0 International)
 三种都用同一套阅读界面：整屏背景图 + 锁死的正文框，支持 markdown、物品图标（`[item:minecraft:apple]`）与 `%PLAYER%` 之类的占位符。
 
 ### 物品与玩法
+
+玩家能接触到的所有东西都在**「破碎编年史」创造模式物品栏**里：编年史本体、两种载体、失传墨水与失传铭刻方块。
 
 - **破碎编年史**：收集册本体，配方为 纸 + 羽毛 + 任意附魔书。界面上有「编年史」与「成书与纸」两个标签页，
   可按标题 / 作者 / 描述 / 模组搜索，可在「全部 ⇄ 已收录」之间切换，支持分卷与置顶；未收录的可点亮条目显示 `？？？`，
@@ -187,3 +191,7 @@ CC BY-NC 4.0 (Attribution-NonCommercial 4.0 International)
 
 - Minecraft **1.21.1** / **NeoForge 21.1.248** 或更高
 - 协议：**CC BY-NC 4.0**（署名—非商业性使用 4.0 国际）
+
+### 说明
+
+本 MOD 的代码与翻译由 AI 共同完成。

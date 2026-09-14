@@ -9,9 +9,6 @@ not tell you a story &mdash; it lets a modpack scatter one across the world: a p
 chest, a warning carved into a sword, an old book someone signed and then forgot. Read them, and they are recorded into
 the <b>Fragment Chronicle</b> forever, even if the item itself is long gone.</p>
 
-<p>Everything a player can touch is in the <b>Fragment Chronicle</b> creative tab: the journal, the carriers, the ink
-and the inscription block.</p>
-
 <h2>Read anything, from anywhere</h2>
 <ul>
   <li><b>Press <code>N</code> (<code>Read Text</code>) while hovering an item in your inventory.</b> The reading screen
@@ -37,6 +34,8 @@ and the inscription block.</p>
 (<code>[item:minecraft:apple]</code>) and placeholders like <code>%PLAYER%</code>.</p>
 
 <h2>The items</h2>
+<p>Everything a player can touch lives in the <b>Fragment Chronicle</b> creative tab: the journal, the two carriers, the
+ink and the inscription block.</p>
 <ul>
   <li><b>Fragment Chronicle</b> &mdash; the journal itself. Crafted from paper + feather + any enchanted book. Two tabs
       (Chronicles and Written Books &amp; Paper), search by title / narrator / description / mod, an All &harr; Collected
@@ -114,6 +113,9 @@ and <code>CHANGELOG.md</code> for every release's changes.</p>
 <h2>License</h2>
 <p>CC BY-NC 4.0 (Attribution-NonCommercial 4.0 International)</p>
 
+<h2>Notes</h2>
+<p>The code and the translations of this mod were made together with AI.</p>
+
 <hr />
 
 <h1>中文</h1>
@@ -121,8 +123,6 @@ and <code>CHANGELOG.md</code> for every release's changes.</p>
 <p><b>《破碎编年史》是一套「碎片化叙事」的载体库</b>（Minecraft <b>1.21.1</b> / NeoForge）。它不替你把故事讲出来，
 而是让整合包把故事<b>散落到世界里</b>&mdash;&mdash;地牢箱子里的半页日记、刻在剑上的一句警告、某个人签了名又忘掉的旧书。
 玩家读到它们，就会被永久记进<b>破碎编年史</b>，哪怕那件物品早就没了。</p>
-<p>玩家能接触到的所有东西都在<b>「破碎编年史」创造模式物品栏</b>里：编年史本体、两种载体、失传墨水与失传铭刻方块。</p>
-
 <h2>什么都能读，在哪儿都能读</h2>
 <ul>
   <li><b>鼠标悬浮在物品栏里的物品上按 <code>N</code>（默认键位「阅读文字」）</b>：不用拿起物品、不用关掉背包就能打开阅读界面，
@@ -141,6 +141,7 @@ and <code>CHANGELOG.md</code> for every release's changes.</p>
 </ul>
 
 <h2>物品与玩法</h2>
+<p>玩家能接触到的所有东西都在<b>「破碎编年史」创造模式物品栏</b>里：编年史本体、两种载体、失传墨水与失传铭刻方块。</p>
 <ul>
   <li><b>破碎编年史</b>：收集册本体，配方为 纸 + 羽毛 + 任意附魔书。界面上有「编年史」与「成书与纸」两个标签页，
       可按标题 / 作者 / 描述 / 模组搜索，可在「全部 &harr; 已收录」之间切换，支持分卷与置顶；未收录的可点亮条目显示
@@ -191,3 +192,6 @@ and <code>CHANGELOG.md</code> for every release's changes.</p>
   <li>Minecraft <b>1.21.1</b> / <b>NeoForge 21.1.248</b> 或更高</li>
   <li>协议：<b>CC BY-NC 4.0</b>（署名&mdash;非商业性使用 4.0 国际）</li>
 </ul>
+
+<h3>说明</h3>
+<p>本 MOD 的代码与翻译由 AI 共同完成。</p>

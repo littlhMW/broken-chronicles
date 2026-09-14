@@ -83,3 +83,9 @@ The jar is produced in `build/libs/`.
 ## License
 
 CC BY-NC 4.0 (Attribution-NonCommercial 4.0 International)
+
+## Notes
+
+The code and the translations of this mod were made together with AI.
+
+本 MOD 的代码与翻译由 AI 共同完成。
